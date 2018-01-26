@@ -4,13 +4,10 @@ from OpenGL.GL import shaders
 
 
 from pyreeEngine.util import ObjLoader
+from pyreeEngine.engine import DeferredShader, ModelObject
 from pathlib import Path
 
 import numpy as np
-
-class ModelObject(PyreeObject):
-    def __init__(self):
-        super(ModelObject, self).__init__()
 
 
 class ObjModelObject(ModelObject):
@@ -22,45 +19,7 @@ class ObjModelObject(ModelObject):
 
         self.tricount = None
 
-        self.vertexCode = """#version 450 core
-        #extension GL_ARB_separate_shader_objects : enable
-        
-        layout (location = 0) in vec3 vert_Position;
-        layout (location = 1) in vec2 vert_UV;
-        layout (location = 2) in vec3 vert_Normal;
-        
-        layout (location = 0) out vec3 vert_Position_out;
-        layout (location = 1) out vec2 vert_UV_out;
-        layout (location = 2) out vec3 vert_Normal_out;
-        
-        uniform mat4 MVP;
-        
-        void main()
-        {
-            gl_Position = MVP * vec4(vert_Position * 0.001, 1);
-            vert_Position_out = (MVP * vec4(vert_Position * 0.001, 1)).xyz;
-            vert_UV_out = vert_UV;
-            vert_Normal_out = vert_Normal;
-        }
-        """
-        self.vertShader = shaders.compileShader(self.vertexCode, GL_VERTEX_SHADER)
-
-        self.fragCode = """#version 450 core
-        #extension GL_ARB_separate_shader_objects : enable
-        
-        layout (location = 0) in vec3 vert_Position;
-        layout (location = 1) in vec2 vert_UV;
-        layout (location = 2) in vec3 vert_Normal;
-        
-        out vec4 outCol;
-
-        void main()
-        {
-            outCol = vec4(vert_Normal, 1.);
-        }
-        """
-        self.fragShader = shaders.compileShader(self.fragCode, GL_FRAGMENT_SHADER)
-        self.shaderProgram = shaders.compileProgram(self.fragShader, self.vertShader)
+        self.shaderProgram = DeferredShader.getShaderProgram()
 
         if pathToObj is not None:
             self.loadFromObj(pathToObj)

@@ -8,12 +8,64 @@ import glfw
 import time
 
 from OpenGL.GL import *
+from OpenGL.GL import shaders
+
+class DeferredShader():
+    """Singleton class containing the default shader for deferred rendering. This way the shader program only has
+    to exist once on the GPU."""
+    vertexCode = """#version 450 core
+    layout (location = 0) in vec3 posIn;
+    layout (location = 1) in vec2 uvIn;
+    layout (location = 2) in vec3 normIn;
+
+    layout (location = 0) out vec3 posOut;
+    layout (location = 1) out vec2 uvOut;
+    layout (location = 2) out vec3 normOut;
+
+    uniform mat4 MVP;
+
+    void main()
+    {
+        gl_Position = MVP * vec4(posIn, 1);
+        posOut = (MVP * vec4(posIn, 1)).xyz;
+        uvOut = uvIn;
+        normOut = normIn;
+    }
+    """
+
+    fragCode = """#version 450 core
+    layout (location = 0) in vec3 posIn;
+    layout (location = 1) in vec2 uvIn;
+    layout (location = 2) in vec3 normIn;
+    
+    layout (location = 0) out vec3 albedoOut;
+    layout (location = 1) out vec3 normalOut;
+    void main()
+    {
+        albedoOut = normIn; // TODO: Texturemapping!
+        normalOut = normIn;
+    }
+    """
+
+    vertShader = None
+    fragShader = None
+    program = None
+
+    @staticmethod
+    def getShaderProgram():
+        if DeferredShader.program is None:
+            DeferredShader.vertShader = shaders.compileShader(DeferredShader.vertexCode, GL_VERTEX_SHADER)
+            DeferredShader.fragShader = shaders.compileShader(DeferredShader.fragCode, GL_FRAGMENT_SHADER)
+            DeferredShader.program = shaders.compileProgram(DeferredShader.vertShader, DeferredShader.fragShader)
+
+        return DeferredShader.program
 
 class PyreeObject():
     def __init__(self):
         self.children = []
         self.pos = Vec3()
         self.rot = np.quaternion(1, 0, 0, 0)
+        self.scale = Vec3(1, 1, 1)
 
     def render(self, mat):
         pass
@@ -27,7 +79,32 @@ class PyreeObject():
         orientMat = np.identity(4)
         orientMat[:3, :3] = quaternion.as_rotation_matrix(self.rot)
 
-        return orientMat * translationMat
+        scaleMat = np.matrix([[self.scale[0], 0, 0, 0],
+                              [0, self.scale[1], 0, 0],
+                              [0, 0, self.scale[2], 0],
+                              [0, 0, 0, 1]])
+
+        return translationMat * orientMat * scaleMat
+
+class ModelObject(PyreeObject):
+    def __init__(self):
+        super(ModelObject, self).__init__()
+
+class LightObject(PyreeObject):
+    def __init__(self):
+        super(LightObject, self).__init__()
+
+class Framebuffer():
+    def __init__(self):
+        self.fbo = None
+
+class DefaultFramebuffer():
+    def __init__(self):
+        self.fbo = 0    # OpenGL default framebuffer
+
+class DeferredFramebuffer():
+    def __init__(self):
+        pass
 
 class LaunchOptions:
     def __init__(self):
@@ -124,10 +201,9 @@ class Engine():
     def loop(self):
         self.render([], PerspectiveCamera())
 
-    def render(self, objects: List[PyreeObject], camera: Camera) -> None:
+    def render(self, objects: List[PyreeObject], camera: Camera, framebuffer) -> None:
         projectionMatrix = camera.projectionMatrix
         viewMatrix = camera.viewMatrix
 
         for object in objects:
             object.render(projectionMatrix * viewMatrix)
-
