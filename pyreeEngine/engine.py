@@ -98,6 +98,9 @@ class Framebuffer():
     def __init__(self):
         self.fbo = None
 
+    def bindFramebuffer(self):
+        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
+
 class DefaultFramebuffer():
     def __init__(self):
         self.fbo = 0    # OpenGL default framebuffer
