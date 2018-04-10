@@ -1,0 +1,4 @@
+pyopengl
+numpy
+numpy-quaternion
+glfw
