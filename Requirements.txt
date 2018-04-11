@@ -2,3 +2,5 @@ pyopengl
 numpy
 numpy-quaternion
 glfw
+numba
+inotify_simple
