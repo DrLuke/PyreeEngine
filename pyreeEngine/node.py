@@ -25,4 +25,21 @@ class Node:
     def init(self):
         pass
 
+    def getData(self):
+        """Get data to restore new instance of class
+
+        :return: Data for object restoration
+        """
+        return None
+
+    def setData(self, data):
+        """Set data on object replacement
+
+        This method takes data and restored object state from a previous instance. 
+
+        :param data: Data to be incorported into new instance
+        :return:
+        """
+        pass
+
 
