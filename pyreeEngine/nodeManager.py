@@ -15,6 +15,9 @@ class NodeDefition():
     def __eq__(self, other):
         return self.name == other.name and self.guid == other.guid and self.modulePath == other.modulePath and self.className == other.className
 
+    def __hash__(self):
+        return hash(self.name + self.guid + self.modulePath + self.className)
+
 
 """
 Manages reloading nodes
