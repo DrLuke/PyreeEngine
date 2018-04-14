@@ -32,14 +32,42 @@ class NodeManager():
         :type projectpath: Path
         """
         self.projectPath = projectpath
+        self.project = None
 
-        self.classes = {}
+        self.nodeDefinitions = set()
 
     def loadProject(self):
         self.project = Project(self.projectPath)
 
-    def reloadNodes(self, path:Path):
+    def parseNodeDefinitions(self):
+        """Parses node definitions from project
+
+        Each node definition in the project json is read by a NodeDefinition object. New Objects need to have iNotify
+        watchers installed on the module file, while modules that aren't in use anymore need their watchers removed.
+        """
+        allNodes = set()    # Current state as defined in project
+        newNodes = set()    # Nodes that have been added
+        for nodeDef in self.project.nodes:
+            newDef = NodeDefition(nodeDef)
+            allNodes.add(newDef)
+            if newDef not in self.nodeDefinitions:
+                newNodes.add(newDef)
+
+        # Initialize all nodes that are new
+        for nodeDef in newNodes:
+            self.initNode(nodeDef)
+
+        # Uninitialize all nodes that aren't existant anymore
+        for nodeDef in self.nodeDefinitions.difference(allNodes):
+            self.delNode(nodeDef)
+
+    def initNode(self, nodeDef):
         pass
+
+    def delNode(self, nodeDef):
+        pass
+
+
 
     def loadNodeClasses(self, modulepath):
         """Imports module and fetches all nodes from it
