@@ -1,4 +1,5 @@
 pyopengl
+scipy
 numpy
 numpy-quaternion
 glfw
