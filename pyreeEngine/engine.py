@@ -115,6 +115,8 @@ class LaunchOptions:
         self.fullscreen = False
         self.monitor = None
 
+        self.projectPath = None     # type: Path
+
 class Camera():
     def __init__(self) -> None:
         self.projectionMatrix = None
@@ -158,8 +160,13 @@ class PerspectiveCamera(Camera):
                                            [0, 0, zz, zw],
                                            [0, 0, -1, 0]])
 
+from pyreeEngine.nodeManager import NodeManager
 class Engine():
     def __init__(self, config: LaunchOptions):
+        ### Project management
+        self.nodeMan = NodeManager(config.projectPath)
+
+        ####################
         # TODO: Init glfw and opengl
         glfw.init()     # TODO: Check if init successful, exit otherwise
 

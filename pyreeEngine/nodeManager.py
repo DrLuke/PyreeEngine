@@ -1,4 +1,5 @@
 from pathlib import Path
+from pyreeEngine.project import Project
 
 import importlib
 import sys
@@ -12,10 +13,18 @@ Manages reloading nodes
 4: Run instances of classes in set order
 """
 class NodeManager():
-    def __init__(self):
-        self.nodepath = None
+    def __init__(self, projectpath:Path):
+        """Initialize ModuleManager
+
+        :param projectpath: Path to project file
+        :type projectpath: Path
+        """
+        self.projectPath = projectpath
 
         self.classes = {}
+
+    def loadProject(self):
+        self.project = Project(self.projectPath)
 
     def reloadNodes(self, path:Path):
         pass
