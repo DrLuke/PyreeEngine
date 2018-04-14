@@ -4,6 +4,18 @@ from pyreeEngine.project import Project
 import importlib
 import sys
 
+
+class NodeDefition():
+    def __init__(self, data):
+        self.name = data["name"]
+        self.guid = data["guid"]
+        self.modulePath = data["module"]
+        self.className = data["module"]
+
+    def __eq__(self, other):
+        return self.name == other.name and self.guid == other.guid and self.modulePath == other.modulePath and self.className == other.className
+
+
 """
 Manages reloading nodes
 
