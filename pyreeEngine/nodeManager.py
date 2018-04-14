@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import importlib
-
+import sys
 
 """
 Manages reloading nodes
@@ -32,11 +32,11 @@ class NodeManager():
         try:
             newmod = importlib.import_module(modulepath)
         except ModuleNotFoundError:
-            print("ERRO: Module %s not found" % modulepath)
+            print("ERRO: Module %s not found" % modulepath, file=sys.stderr)
         try:
             classes = newmod.__nodeclasses__
         except AttributeError:
-            print("ERROR: Module %s is missing '__nodeclasses__' attribute" % modulepath)
+            print("ERROR: Module %s is missing '__nodeclasses__' attribute" % modulepath, file=sys.stderr)
             return None
 
 
