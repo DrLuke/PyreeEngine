@@ -37,10 +37,14 @@ class NodeManager():
         self.projectPath = projectpath
         self.project = None
 
-        self.nodeDefinitions = set()
+        self.nodeDefinitions = set()    # type: set
+
+        self.loadProject()
 
     def loadProject(self):
         self.project = Project(self.projectPath)
+
+        self.parseNodeDefinitions()
 
     def parseNodeDefinitions(self):
         """Parses node definitions from project
@@ -58,14 +62,16 @@ class NodeManager():
 
         # Initialize all nodes that are new
         for nodeDef in newNodes:
-            self.initNode(nodeDef)
+            if self.initNode(nodeDef):
+                self.nodeDefinitions.add(nodeDef)
 
         # Uninitialize all nodes that aren't existant anymore
         for nodeDef in self.nodeDefinitions.difference(allNodes):
             self.delNode(nodeDef)
+            self.nodeDefinitions.remove(nodeDef)
 
-    def initNode(self, nodeDef):
-        pass
+    def initNode(self, nodeDef) -> bool:
+        return False
 
     def delNode(self, nodeDef):
         pass
