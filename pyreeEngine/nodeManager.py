@@ -15,7 +15,6 @@ class NodeManager():
     def __init__(self):
         self.nodepath = None
 
-        self.layers = {}
         self.classes = {}
 
     def reloadNodes(self, path:Path):
