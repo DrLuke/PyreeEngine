@@ -13,11 +13,13 @@ class Project:
         self.authorName = None
         self.nodes = None
 
+        self.readJSON(self.path)
 
     def readJSON(self, path: Path):
         with path.open("r") as f:
             self.data = json.load(f)
 
+        # TODO: Check file to be correct
         self.projectName = self.getFromData("projectName")
         self.author = self.getFromData("author")
         self.nodes = self.getFromData("nodes")
