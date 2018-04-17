@@ -4,6 +4,13 @@ from pyreeEngine.project import Project
 import importlib
 import sys
 
+from inotify_simple import INotify, flags, masks
+import inotify_simple
+
+import types
+
+import time
+
 
 class NodeDefition():
     def __init__(self, data):
@@ -17,6 +24,71 @@ class NodeDefition():
 
     def __hash__(self):
         return hash(self.name + self.guid + self.modulePath + self.className)
+
+class ModuleWatcher():
+    def __init__(self, modulepath: str):
+        self.modulePath = modulepath
+        self.moduleFilePath = None
+        self.module = None
+        self.classes = None
+        self.valid = False  # type: bool
+
+        self.loadNodeModule()
+
+        if type(self.module) is types.ModuleType:
+            self.valid = True
+            self.installFileWatch()
+
+    def loadNodeModule(self):
+        """Imports module and fetches all nodes from it
+
+        :param modulepath: Path to module (e.g. foo.bar.mymodule)
+        :type modulepath: string
+        :return: All node-classes from module or None on failure
+        :rtype: List[Class]
+        """
+        importlib.invalidate_caches()
+        if self.module is None:
+            try:
+                self.module = importlib.import_module(self.modulePath)
+            except ModuleNotFoundError:
+                print("ERROR: Module %s not found" % self.modulePath, file=sys.stderr)
+                return None
+        elif type(self.module) is types.ModuleType:
+            importlib.reload(self.module)
+        else:
+            self.module = None  # Failback
+        try:
+            self.classes = self.module.__nodeclasses__
+        except AttributeError:
+            print("ERROR: Module %s is missing '__nodeclasses__' attribute" % self.modulePath, file=sys.stderr)
+            return None
+        self.moduleFilePath = Path(self.module.__file__)
+
+    def getClass(self, classname: str):
+        for nodeclass in self.classes:
+            if nodeclass.__name__ == classname:
+                return nodeclass
+        return None
+
+    def installFileWatch(self):
+        fl = flags.CREATE | flags.MODIFY | flags.MOVED_TO
+        self.iNotify = INotify()
+        self.watch = self.iNotify.add_watch(self.moduleFilePath.parent, fl)
+
+    def checkFileWatch(self):
+        if not self.valid:
+            return
+        events = self.iNotify.read(timeout=0)
+        for event in events:
+            self.checkEvent(event)
+
+    def checkEvent(self, event: inotify_simple.Event):
+        if event.name == self.moduleFilePath.name:
+            if event.mask & (flags.CREATE | flags.MODIFY | flags.MOVED_TO):
+                self.loadNodeModule()
+            elif event.mask & (flags.DELETE | flags.DELETE_SELF):
+                pass    # TODO: Implement
 
 
 """
@@ -38,11 +110,25 @@ class NodeManager():
         self.project = None
 
         self.nodeDefinitions = set()    # type: set
+        self.moduleWatchers = {}        # type: dict
+
+        self.projecti = None
+        self.installProjectWatch()
 
         self.loadProject()
 
+    def installProjectWatch(self):
+        fl = flags.MODIFY | flags.MOVED_TO
+        self.projecti = INotify()
+        self.projectwatch = self.projecti.add_watch(self.projectPath.parent, fl)
+
+    def checkProjectWatch(self, event: inotify_simple.Event):
+        if event.name == self.projectPath.name:
+            self.loadProject()
+
     def loadProject(self):
-        self.project = Project(self.projectPath)
+        print("NODEMAN: Reloading Project")
+        self.project = Project(self.projectPath)    # TODO: Check if project is valid, keep using old one if error occurs
 
         self.parseNodeDefinitions()
 
@@ -71,31 +157,26 @@ class NodeManager():
             self.nodeDefinitions.remove(nodeDef)
 
     def initNode(self, nodeDef) -> bool:
+        # Check if module already is being watched
+        if nodeDef.modulePath not in self.moduleWatchers:
+            newwatcher = ModuleWatcher(nodeDef.modulePath)
+            if newwatcher.valid:
+                self.moduleWatchers[nodeDef.modulePath] = newwatcher
+                return True
+
         return False
 
     def delNode(self, nodeDef):
         pass
 
+    def tick(self):
+        events = self.projecti.read(timeout=0)
+        for event in events:
+            self.checkProjectWatch(event)
 
+        for modulewatcher in self.moduleWatchers.values():
+            modulewatcher.checkFileWatch()
 
-    def loadNodeClasses(self, modulepath):
-        """Imports module and fetches all nodes from it
-
-        :param modulepath: Path to module (e.g. foo.bar.mymodule)
-        :type modulepath: string
-        :return: All node-classes from module or None on failure
-        :rtype: List[Class]
-        """
-        importlib.invalidate_caches()
-        try:
-            newmod = importlib.import_module(modulepath)
-        except ModuleNotFoundError:
-            print("ERRO: Module %s not found" % modulepath, file=sys.stderr)
-        try:
-            classes = newmod.__nodeclasses__
-        except AttributeError:
-            print("ERROR: Module %s is missing '__nodeclasses__' attribute" % modulepath, file=sys.stderr)
-            return None
 
 
 

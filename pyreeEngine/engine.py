@@ -166,6 +166,13 @@ class Engine():
         ### Project management
         self.nodeMan = NodeManager(config.projectPath)
 
+        while(True):
+
+            self.nodeMan.tick()
+
+            time.sleep(0.01)
+
+
         ####################
         # TODO: Init glfw and opengl
         glfw.init()     # TODO: Check if init successful, exit otherwise
