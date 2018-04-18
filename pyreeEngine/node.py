@@ -17,10 +17,12 @@ def signalOutput(name: str, type: Union[Type, List[Type]], desc: str=""):
         return func
     return decorator
 
-class Node:
+class BaseNode:
     def __init__(self):
         self.__signalInputs__ = {}
         self.__signalOutputs__ = {}
+
+        self.init()
 
     def init(self):
         pass

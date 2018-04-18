@@ -11,13 +11,15 @@ import types
 
 import time
 
+from pyreeEngine.node import BaseNode
+
 
 class NodeDefinition():
     def __init__(self, data):
         self.name = data["name"]
         self.guid = data["guid"]
         self.modulePath = data["module"]
-        self.className = data["module"]
+        self.className = data["class"]
 
     def __eq__(self, other):
         return self.name == other.name and self.guid == other.guid and self.modulePath == other.modulePath and self.className == other.className
@@ -91,6 +93,39 @@ class ModuleWatcher():
                 pass    # TODO: Implement
 
 
+class NodeHandler():
+    """Manages node instance"""
+    def __init__(self, nodedef: NodeDefinition, modulewatch: ModuleWatcher):
+        self.moduleWatch = modulewatch
+        self.className = nodedef.className
+        self.nodeClass = None
+        self.nodeInstance = None    # type: BaseNode
+        self.valid = False
+
+        self.reloadInstance()
+
+    def reloadInstance(self) -> bool:
+        # TODO: More error-handling
+        self.valid = False
+        if self.nodeInstance is not None:
+            oldData = self.nodeInstance.getData()
+        else:
+            oldData = None
+
+        newClass = self.moduleWatch.getClass(self.className)
+
+        if not issubclass(newClass, BaseNode):
+            print("NODEMAN: ERROR: Nodeclass '%s' from module '%s' is not subclass of BaseNode" % (self.className, self.moduleWatch.modulePath))
+            return False
+
+        del self.nodeInstance
+
+        self.nodeInstance = newClass()
+        if oldData is not None:
+            self.nodeInstance.setData(oldData)
+        self.valid = True
+
+
 """
 Manages reloading nodes
 
@@ -111,6 +146,7 @@ class NodeManager():
 
         self.nodeDefinitions = set()    # type: set
         self.moduleWatchers = {}        # type: dict
+        self.nodeHandlers = {}          # type: dict
 
         self.projecti = None
         self.installProjectWatch()
@@ -148,21 +184,30 @@ class NodeManager():
 
         # Initialize all nodes that are new
         for nodeDef in newNodes:
-            if self.initNode(nodeDef):
+            if self.initModuleWatch(nodeDef):
                 self.nodeDefinitions.add(nodeDef)
+                self.initNodeHandler(nodeDef, self.moduleWatchers[nodeDef.modulePath])
 
         # Uninitialize all nodes that aren't existant anymore
         for nodeDef in self.nodeDefinitions.difference(allNodes):
             self.delNode(nodeDef)
             self.nodeDefinitions.remove(nodeDef)
 
-    def initNode(self, nodeDef) -> bool:
+    def initModuleWatch(self, nodeDef) -> bool:
         # Check if module already is being watched
         if nodeDef.modulePath not in self.moduleWatchers:
             newwatcher = ModuleWatcher(nodeDef.modulePath)
             if newwatcher.valid:
                 self.moduleWatchers[nodeDef.modulePath] = newwatcher
                 return True
+
+        return False
+
+    def initNodeHandler(self, nodedef, modulewatch) -> bool:
+        if nodedef not in self.nodeHandlers:
+            self.nodeHandlers[nodedef] = NodeHandler(nodedef, modulewatch)
+        else:
+            print("WARNING: NodeHandler for nodeDef already exists! %s %s %s %s" % (nodedef.name, nodedef.modulePath, nodedef.classnName, nodedef.guid))
 
         return False
 
