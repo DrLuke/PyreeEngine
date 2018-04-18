@@ -12,7 +12,7 @@ import types
 import time
 
 
-class NodeDefition():
+class NodeDefinition():
     def __init__(self, data):
         self.name = data["name"]
         self.guid = data["guid"]
@@ -141,7 +141,7 @@ class NodeManager():
         allNodes = set()    # Current state as defined in project
         newNodes = set()    # Nodes that have been added
         for nodeDef in self.project.nodes:
-            newDef = NodeDefition(nodeDef)
+            newDef = NodeDefinition(nodeDef)
             allNodes.add(newDef)
             if newDef not in self.nodeDefinitions:
                 newNodes.add(newDef)
