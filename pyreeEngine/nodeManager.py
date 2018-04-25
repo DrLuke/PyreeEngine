@@ -30,6 +30,21 @@ class NodeDefinition():
     def __repr__(self):
         return ("NodeDefinition (name=%s guid=%s modpath=%s class=%s" % (self.name, self.guid, self.modulePath, self.className))
 
+
+class SignalDefinition():
+    def __init__(self, data):
+        self.source = data["source"]
+        self.target = data["target"]
+        self.sourceSigName = data["sourceSigName"]
+        self.targetSigName = data["targetSigName"]
+
+    def __eq__(self, other):
+        return self.source == other.source and self.target == other.target and self.sourceSigName == other.sourceSigName and self.targetSigName == other.targetSigName
+
+    def __hash__(self):
+        return hash(self.source + self.target + self.sourceSigName + self.targetSigName)
+
+
 class ModuleWatcher():
     def __init__(self, modulepath: str):
         self.modulePath = modulepath
