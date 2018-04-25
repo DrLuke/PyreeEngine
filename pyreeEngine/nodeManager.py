@@ -120,8 +120,8 @@ class ModuleWatcher():
 class NodeHandler():
     """Manages node instance"""
     def __init__(self, nodedef: NodeDefinition, modulewatch: ModuleWatcher):
+        self.nodeDef = nodedef
         self.moduleWatch = modulewatch
-        self.className = nodedef.className
         self.nodeClass = None
         self.nodeInstance = None    # type: BaseNode
         self.valid = False
@@ -136,10 +136,10 @@ class NodeHandler():
         else:
             oldData = None
 
-        newClass = self.moduleWatch.getClass(self.className)
+        newClass = self.moduleWatch.getClass(self.nodeDef.className)
 
         if not issubclass(newClass, BaseNode):
-            print("NODEMAN: ERROR: Nodeclass '%s' from module '%s' is not subclass of BaseNode" % (self.className, self.moduleWatch.modulePath))
+            print("NODEMAN: ERROR: Nodeclass '%s' from module '%s' is not subclass of BaseNode" % (self.nodeDef.className, self.moduleWatch.modulePath))
             return False
 
         del self.nodeInstance
