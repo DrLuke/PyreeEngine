@@ -1,3 +1,5 @@
+from typing import Dict, Tuple
+
 from pathlib import Path
 from pyreeEngine.project import Project
 
@@ -144,7 +146,13 @@ class NodeHandler():
 
         del self.nodeInstance
 
-        self.nodeInstance = newClass()
+        try:
+            self.nodeInstance = newClass()
+            self.nodeClass = newClass
+        except:
+            print("ERROR: Exception on instance reload")
+            #TODO: Print stack trace here
+
         if oldData is not None:
             self.nodeInstance.setData(oldData)
         self.valid = True
@@ -169,8 +177,10 @@ class NodeManager():
         self.project = None
 
         self.nodeDefinitions = set()    # type: set
+        self.signalDefinitions = set()  # type: set
         self.moduleWatchers = {}        # type: dict
         self.nodeHandlers = {}          # type: dict
+        self.signalNodeMap = {}         # type: Dict[SignalDefinition, Tuple(NodeDefinition, NodeDefinition)]
 
         self.projecti = None
         self.installProjectWatch()
@@ -191,6 +201,7 @@ class NodeManager():
         self.project = Project(self.projectPath)    # TODO: Check if project is valid, keep using old one if error occurs
 
         self.parseNodeDefinitions()
+        self.parseSignalDefinitions()
 
     def parseNodeDefinitions(self):
         """Parses node definitions from project
@@ -221,6 +232,35 @@ class NodeManager():
             self.delNode(nodeDef)
             self.nodeDefinitions.remove(nodeDef)
 
+    def parseSignalDefinitions(self):
+        allSignals = set()
+        newSignals = set()
+        for signalDef in self.project.signals:
+            newDef = SignalDefinition(signalDef)
+            allSignals.add(newDef)
+            if newDef not in self.signalDefinitions:
+                newSignals.add(newDef)
+
+        for signalDef in newSignals:
+            nodeDefs = self.getNodeDefsFromSignalDef(signalDef)
+            if nodeDefs[0] is not None and nodeDefs[1] is not None:
+                self.signalNodeMap[signalDef] = nodeDefs
+            else:
+                print("ERROR: Couldn't find nodes for signal")    # TODO: Better error message
+            self.patchSignal(signalDef)
+
+        for signalDef in self.signalDefinitions.difference(allSignals):
+            pass    # TODO: What to do if signal doesn't exist anymore?
+
+    def getNodeDefsFromSignalDef(self, signaldef: SignalDefinition) -> Tuple[NodeDefinition, NodeDefinition]:
+        for nodeDef in self.nodeDefinitions:
+            if signaldef.source == nodeDef.guid:
+                sourceNodeDef = nodeDef
+            if signaldef.target == nodeDef.guid:
+                targetNodeDef = nodeDef
+        return (sourceNodeDef, targetNodeDef)
+
+
     def initModuleWatch(self, nodeDef) -> bool:
         # Check if module already is being watched
         if nodeDef.modulePath not in self.moduleWatchers:
@@ -240,7 +280,7 @@ class NodeManager():
         return False
 
     def delNode(self, nodeDef):
-        pass
+        pass    # TODO: Check if any more nodes reference modulewatch equal to this node. If yes, remove moduleWatch.
 
     def tick(self):
         events = self.projecti.read(timeout=0)
@@ -253,6 +293,30 @@ class NodeManager():
                     if nodeHandler.moduleWatch is modulewatcher:
                         nodeHandler.reloadInstance()
 
+    def patchSignal(self, signaldef: SignalDefinition):
+        nodeDefSource = self.signalNodeMap[signaldef][0]
+        nodeDefTarget = self.signalNodeMap[signaldef][1]
+
+        nodeHandlerSource = self.nodeHandlers[nodeDefSource]    # type: NodeHandler
+        nodeHandlerTarget = self.nodeHandlers[nodeDefTarget]    # type: NodeHandler
+
+        if not nodeHandlerSource.valid and not nodeHandlerTarget.valid:
+            print("ERROR: Nodehandlers not valid!")
+            return False
+
+        if signaldef.sourceSigName in nodeHandlerSource.nodeClass.__signalOutputs__ and signaldef.targetSigName in nodeHandlerTarget.nodeClass.__signalInputs__:
+            outputMethod = nodeHandlerTarget.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
+            inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
+        else:
+            print("ERROR: Inputs/Outputs not found")    # TODO: More elaborate error message
+            return False
+
+        if hasattr(nodeHandlerTarget.nodeClass, inputMethod.__name__):
+            setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
+        else:
+            print("ERROR: Function is not an attribute")
+        nodeHandlerTarget.nodeInstance.init()
+        return True
 
 
 
