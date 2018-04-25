@@ -13,6 +13,8 @@ class Project:
         self.authorName = None
         self.nodes = None
 
+        self.signals = None
+
         self.readJSON(self.path)
 
     def readJSON(self, path: Path):
@@ -23,6 +25,7 @@ class Project:
         self.projectName = self.getFromData("projectName")
         self.author = self.getFromData("author")
         self.nodes = self.getFromData("nodes")
+        self.signals = self.getFromData("signals")
 
     def getFromData(self, key):
         if key in self.data:
