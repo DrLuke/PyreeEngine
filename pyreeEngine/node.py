@@ -1,26 +1,43 @@
 from typing import Union, Type, List, Callable
+import inspect
 
 from pyreeEngine.engine import Framebuffer
 
 
-def signalInput(name: str, type: Union[Type, List[Type]], desc: str=""):
-    def decorator(func:Callable):
-        obj = func.__self__
-        obj.__signalInputs__[name] = (func, type, desc)
+def signalInput(name: str, type: Union[Type, List[Type]], meta: dict= None) -> Callable:
+    def decorator(func: Callable):
+        func.__PYREESIGNAL__data__ = ("input", name, type, meta)
         return func
     return decorator
 
-def signalOutput(name: str, type: Union[Type, List[Type]], desc: str=""):
-    def decorator(func:Callable):
-        obj = func.__self__
-        obj.__signalOutputs__[name] = (func, type, desc)
+
+def signalOutput(name: str, type: Union[Type, List[Type]], meta: dict= None) -> Callable:
+    def decorator(func: Callable):
+        func.__PYREESIGNAL__data__ = ("output", name, type, meta)
         return func
     return decorator
 
-class BaseNode:
+class BaseNodeMetaclass(type):
+    def __new__(cls, *args, **kwargs):
+        newClass = type.__new__(cls, *args, **kwargs)
+
+        functions = inspect.getmembers(newClass, predicate=inspect.isfunction)
+        for func in functions:
+            if hasattr(func[1], "__PYREESIGNAL__data__"):
+                data = func[1].__PYREESIGNAL__data__
+                if data[0] == "output":
+                    newClass.__signalOutputs__[data[1]] = (func[1], data[2], data[3])
+                elif data[0] == "input":
+                    newClass.__signalInputs__[data[1]] = (func[1], data[2], data[3])
+
+        return newClass
+
+
+class BaseNode(metaclass=BaseNodeMetaclass):
+    __signalInputs__ = {}
+    __signalOutputs__ = {}
+
     def __init__(self):
-        self.__signalInputs__ = {}
-        self.__signalOutputs__ = {}
 
         self.init()
 
