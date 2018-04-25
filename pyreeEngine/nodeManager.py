@@ -27,6 +27,9 @@ class NodeDefinition():
     def __hash__(self):
         return hash(self.name + self.guid + self.modulePath + self.className)
 
+    def __repr__(self):
+        return ("NodeDefinition (name=%s guid=%s modpath=%s class=%s" % (self.name, self.guid, self.modulePath, self.className))
+
 class ModuleWatcher():
     def __init__(self, modulepath: str):
         self.modulePath = modulepath
@@ -78,19 +81,25 @@ class ModuleWatcher():
         self.iNotify = INotify()
         self.watch = self.iNotify.add_watch(self.moduleFilePath.parent, fl)
 
-    def checkFileWatch(self):
+    def checkFileWatch(self) -> bool:
+        retVal = False
         if not self.valid:
-            return
+            return False
         events = self.iNotify.read(timeout=0)
         for event in events:
-            self.checkEvent(event)
+            if self.checkEvent(event):
+                retVal = True
+        return retVal
 
-    def checkEvent(self, event: inotify_simple.Event):
+    def checkEvent(self, event: inotify_simple.Event) -> bool:
+        retVal = False
         if event.name == self.moduleFilePath.name:
             if event.mask & (flags.CREATE | flags.MODIFY | flags.MOVED_TO):
                 self.loadNodeModule()
+                retVal = True
             elif event.mask & (flags.DELETE | flags.DELETE_SELF):
                 pass    # TODO: Implement
+        return retVal
 
 
 class NodeHandler():
@@ -184,9 +193,13 @@ class NodeManager():
 
         # Initialize all nodes that are new
         for nodeDef in newNodes:
-            if self.initModuleWatch(nodeDef):
+            self.initModuleWatch(nodeDef)
+
+            if self.moduleWatchers[nodeDef.modulePath].valid:
                 self.nodeDefinitions.add(nodeDef)
                 self.initNodeHandler(nodeDef, self.moduleWatchers[nodeDef.modulePath])
+            else:
+                print("WARNING: Module %s isn't valid" % nodeDef.modulePath)
 
         # Uninitialize all nodes that aren't existant anymore
         for nodeDef in self.nodeDefinitions.difference(allNodes):
@@ -207,7 +220,7 @@ class NodeManager():
         if nodedef not in self.nodeHandlers:
             self.nodeHandlers[nodedef] = NodeHandler(nodedef, modulewatch)
         else:
-            print("WARNING: NodeHandler for nodeDef already exists! %s %s %s %s" % (nodedef.name, nodedef.modulePath, nodedef.classnName, nodedef.guid))
+            print("WARNING: NodeHandler for nodeDef already exists! %s %s %s %s" % (nodedef.name, nodedef.modulePath, nodedef.className, nodedef.guid))
 
         return False
 
@@ -220,7 +233,10 @@ class NodeManager():
             self.checkProjectWatch(event)
 
         for modulewatcher in self.moduleWatchers.values():
-            modulewatcher.checkFileWatch()
+            if modulewatcher.checkFileWatch():  # Module has been reloaded -> reload all nodes from this module
+                for nodeHandler in self.nodeHandlers.values():
+                    if nodeHandler.moduleWatch is modulewatcher:
+                        nodeHandler.reloadInstance()
 
 
 
