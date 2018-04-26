@@ -127,6 +127,7 @@ class NodeHandler():
         self.nodeClass = None
         self.nodeInstance = None    # type: BaseNode
         self.valid = False
+        self.inited = False
 
         self.reloadInstance()
 
@@ -148,6 +149,7 @@ class NodeHandler():
 
         try:
             self.nodeInstance = newClass()
+            self.inited = False
             self.nodeClass = newClass
         except:
             print("ERROR: Exception on instance reload")
@@ -244,6 +246,7 @@ class NodeManager():
         for signalDef in newSignals:
             nodeDefs = self.getNodeDefsFromSignalDef(signalDef)
             if nodeDefs[0] is not None and nodeDefs[1] is not None:
+                self.signalDefinitions.add(signalDef)
                 self.signalNodeMap[signalDef] = nodeDefs
             else:
                 print("ERROR: Couldn't find nodes for signal")    # TODO: Better error message
@@ -292,6 +295,15 @@ class NodeManager():
                 for nodeHandler in self.nodeHandlers.values():
                     if nodeHandler.moduleWatch is modulewatcher:
                         nodeHandler.reloadInstance()
+                        if nodeHandler.valid:
+                            self.patchNodeSignals(nodeHandler.nodeDef)
+                            if not nodeHandler.inited:
+                                nodeHandler.nodeInstance.init()
+
+    def patchNodeSignals(self, nodedef: NodeDefinition):
+        for signalDef in self.signalDefinitions:
+            if signalDef.source == nodedef.guid or signalDef.target == nodedef.guid:
+                self.patchSignal(signalDef)
 
     def patchSignal(self, signaldef: SignalDefinition):
         nodeDefSource = self.signalNodeMap[signaldef][0]
@@ -315,7 +327,6 @@ class NodeManager():
             setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
         else:
             print("ERROR: Function is not an attribute")
-        nodeHandlerTarget.nodeInstance.init()
         return True
 
 
