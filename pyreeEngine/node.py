@@ -39,6 +39,8 @@ def execOut(name: str, meta: dict= None) -> Callable:
 class BaseNodeMetaclass(type):
     def __new__(cls, *args, **kwargs):
         newClass = type.__new__(cls, *args, **kwargs)
+        newClass.__signalInputs__ = {}
+        newClass.__signalOutputs__ = {}
 
         functions = inspect.getmembers(newClass, predicate=inspect.isfunction)
         for func in functions:
@@ -53,9 +55,6 @@ class BaseNodeMetaclass(type):
 
 
 class BaseNode(metaclass=BaseNodeMetaclass):
-    __signalInputs__ = {}
-    __signalOutputs__ = {}
-
     def __init__(self):
         pass
         #self.init()
