@@ -323,7 +323,7 @@ class NodeManager():
             return False
 
         if signaldef.sourceSigName in nodeHandlerSource.nodeClass.__signalOutputs__ and signaldef.targetSigName in nodeHandlerTarget.nodeClass.__signalInputs__:
-            outputMethod = nodeHandlerTarget.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
+            outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
             inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
         else:
             print("ERROR: Inputs/Outputs not found")    # TODO: More elaborate error message
