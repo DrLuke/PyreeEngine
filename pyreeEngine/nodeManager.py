@@ -39,6 +39,7 @@ class SignalDefinition():
         self.target = data["target"]
         self.sourceSigName = data["sourceSigName"]
         self.targetSigName = data["targetSigName"]
+        self.sigtype = data["__PYREE__sigtype"]
 
     def __eq__(self, other):
         return self.source == other.source and self.target == other.target and self.sourceSigName == other.sourceSigName and self.targetSigName == other.targetSigName
@@ -323,12 +324,19 @@ class NodeManager():
             print("ERROR: Inputs/Outputs not found")    # TODO: More elaborate error message
             return False
 
-        if hasattr(nodeHandlerTarget.nodeClass, inputMethod.__name__):
-            setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
-        else:
-            print("ERROR: Function is not an attribute")
-        return True
-
+        if signaldef.sigtype == "signal":
+            if hasattr(nodeHandlerTarget.nodeClass, inputMethod.__name__):
+                setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
+            else:
+                print("ERROR: Function is not an attribute")
+            return True
+        elif signaldef.sigtype == "exec":
+            if hasattr(nodeHandlerSource.nodeClass, outputMethod.__name__):
+                setattr(nodeHandlerSource.nodeClass, outputMethod.__name__, inputMethod)
+            else:
+                print("ERROR: Function is not an attribute")
+            return True
+        return False
 
 
 

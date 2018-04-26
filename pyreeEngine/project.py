@@ -25,10 +25,23 @@ class Project:
         self.projectName = self.getFromData("projectName")
         self.author = self.getFromData("author")
         self.nodes = self.getFromData("nodes")
-        self.signals = self.getFromData("signals")
+        self.signals = self.getSignals()
+        self.signals += self.getExecs()
 
     def getFromData(self, key):
         if key in self.data:
             return self.data[key]
         else:
             return None
+
+    def getSignals(self):
+        sigs = self.getFromData("signals")
+        for sig in sigs:
+            sig["__PYREE__sigtype"] = "signal"
+        return sigs
+
+    def getExecs(self):
+        execs = self.getFromData("execSignals")
+        for exec in execs:
+            exec["__PYREE__sigtype"] = "exec"
+        return execs
