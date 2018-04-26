@@ -4,6 +4,10 @@ import inspect
 from pyreeEngine.engine import Framebuffer
 
 
+class execType():
+    pass
+
+
 def signalInput(name: str, type: Union[Type, List[Type]], meta: dict= None) -> Callable:
     def decorator(func: Callable):
         func.__PYREESIGNAL__data__ = ("input", name, type, meta)
@@ -16,6 +20,21 @@ def signalOutput(name: str, type: Union[Type, List[Type]], meta: dict= None) -> 
         func.__PYREESIGNAL__data__ = ("output", name, type, meta)
         return func
     return decorator
+
+
+def execIn(name: str, meta: dict= None) -> Callable:
+    def decorator(func: Callable):
+        func.__PYREESIGNAL__data__ = ("input", name, execType, meta)
+        return func
+    return decorator
+
+
+def execOut(name: str, meta: dict= None) -> Callable:
+    def decorator(func: Callable):
+        func.__PYREESIGNAL__data__ = ("output", name, execType, meta)
+        return func
+    return decorator
+
 
 class BaseNodeMetaclass(type):
     def __new__(cls, *args, **kwargs):
