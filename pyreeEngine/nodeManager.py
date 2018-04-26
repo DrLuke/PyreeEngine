@@ -205,6 +205,7 @@ class NodeManager():
 
         self.parseNodeDefinitions()
         self.parseSignalDefinitions()
+        self.initNodes()
 
     def parseNodeDefinitions(self):
         """Parses node definitions from project
@@ -264,6 +265,10 @@ class NodeManager():
                 targetNodeDef = nodeDef
         return (sourceNodeDef, targetNodeDef)
 
+    def initNodes(self):
+        for nodehandler in self.nodeHandlers.values():
+            if not nodehandler.inited:
+                nodehandler.nodeInstance.init()
 
     def initModuleWatch(self, nodeDef) -> bool:
         # Check if module already is being watched

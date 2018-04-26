@@ -57,8 +57,8 @@ class BaseNode(metaclass=BaseNodeMetaclass):
     __signalOutputs__ = {}
 
     def __init__(self):
-
-        self.init()
+        pass
+        #self.init()
 
     def init(self):
         pass
