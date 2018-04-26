@@ -188,6 +188,8 @@ class NodeManager():
         self.projecti = None
         self.installProjectWatch()
 
+        self.entryMethod = None
+
         self.loadProject()
 
     def installProjectWatch(self):
@@ -206,6 +208,7 @@ class NodeManager():
         self.parseNodeDefinitions()
         self.parseSignalDefinitions()
         self.initNodes()
+        self.prepareEntry()
 
     def parseNodeDefinitions(self):
         """Parses node definitions from project
@@ -306,6 +309,9 @@ class NodeManager():
                             if not nodeHandler.inited:
                                 nodeHandler.nodeInstance.init()
 
+        if self.entryMethod is not None:
+            self.entryMethod()
+
     def patchNodeSignals(self, nodedef: NodeDefinition):
         for signalDef in self.signalDefinitions:
             if signalDef.source == nodedef.guid or signalDef.target == nodedef.guid:
@@ -343,6 +349,18 @@ class NodeManager():
             return True
         return False
 
-
-
-
+    def prepareEntry(self):
+        print(self.project.entry["guid"])
+        for nodedef in self.nodeHandlers:
+            if nodedef.guid == self.project.entry["guid"]:
+                print(nodedef.guid)
+                print(self.nodeHandlers[nodedef].nodeClass)
+                print(self.nodeHandlers[nodedef].nodeClass.__signalInputs__)
+                print(self.nodeHandlers)
+                if self.project.entry["sigName"] in self.nodeHandlers[nodedef].nodeClass.__signalInputs__:
+                    entryFunc = self.nodeHandlers[nodedef].nodeClass.__signalInputs__[self.project.entry["sigName"]][0]
+                    self.entryMethod = getattr(self.nodeHandlers[nodedef].nodeInstance, entryFunc.__name__)
+                    return
+        self.entryMethod = None
+        print("ERROR: Entrypoint not found! guid:%s signame:%s" % (self.project.entry["guid"], self.project.entry["sigName"]))
+        print("WARNING: Program execution halted due to missing entry")
