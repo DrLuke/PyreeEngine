@@ -12,8 +12,8 @@ class Project:
         self.projectName = None
         self.authorName = None
         self.nodes = None
-
         self.signals = None
+        self.entry = None
 
         self.readJSON(self.path)
 
@@ -27,6 +27,7 @@ class Project:
         self.nodes = self.getFromData("nodes")
         self.signals = self.getSignals()
         self.signals += self.getExecs()
+        self.entry = self.getFromData("entry")
 
     def getFromData(self, key):
         if key in self.data:
