@@ -1,3 +1,5 @@
+from typing import List
+
 from pyreeEngine.engine import PyreeObject
 from OpenGL.GL import *
 from OpenGL.GL import shaders
@@ -10,9 +12,9 @@ from pathlib import Path
 import numpy as np
 
 
-class ObjModelObject(ModelObject):
-    def __init__(self, pathToObj: Path):
-        super(ObjModelObject, self).__init__()
+class ModelObject(ModelObject):
+    def __init__(self, pathToObj: Path=None):
+        super(ModelObject, self).__init__()
 
         self.vbo = None
         self.vao = None
@@ -27,6 +29,12 @@ class ObjModelObject(ModelObject):
 
     def loadFromObj(self, pathToObj: Path):
         verts, texdata = ObjLoader(pathToObj)
+        self.loadFromVerts(verts)
+
+
+    def loadFromVerts(self, verts: List[float]):
+        if verts is not np.array:
+            verts = np.array(verts, np.float32)
         self.tricount = int(len(verts) / 8)
 
         self.vbo = glGenBuffers(1)
@@ -37,13 +45,14 @@ class ObjModelObject(ModelObject):
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(0))    # XYZ
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(0))  # XYZ
         glEnableVertexAttribArray(0)
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(3 * verts.itemsize))   # UV
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(3 * verts.itemsize))  # UV
         glEnableVertexAttribArray(1)
 
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(5 * verts.itemsize))   # Normal
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize,
+                              ctypes.c_void_p(5 * verts.itemsize))  # Normal
         glEnableVertexAttribArray(2)
 
     def render(self, viewProjMatrix):
