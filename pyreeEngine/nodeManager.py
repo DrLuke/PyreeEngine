@@ -350,13 +350,8 @@ class NodeManager():
         return False
 
     def prepareEntry(self):
-        print(self.project.entry["guid"])
         for nodedef in self.nodeHandlers:
             if nodedef.guid == self.project.entry["guid"]:
-                print(nodedef.guid)
-                print(self.nodeHandlers[nodedef].nodeClass)
-                print(self.nodeHandlers[nodedef].nodeClass.__signalInputs__)
-                print(self.nodeHandlers)
                 if self.project.entry["sigName"] in self.nodeHandlers[nodedef].nodeClass.__signalInputs__:
                     entryFunc = self.nodeHandlers[nodedef].nodeClass.__signalInputs__[self.project.entry["sigName"]][0]
                     self.entryMethod = getattr(self.nodeHandlers[nodedef].nodeInstance, entryFunc.__name__)
