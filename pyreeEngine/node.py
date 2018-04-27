@@ -1,7 +1,7 @@
 from typing import Union, Type, List, Callable
 import inspect
 
-from pyreeEngine.engine import Framebuffer
+from pyreeEngine.engine import Framebuffer, Camera, PyreeObject
 
 
 class execType():
@@ -79,4 +79,11 @@ class BaseNode(metaclass=BaseNodeMetaclass):
         """
         pass
 
+class RenderNode(BaseNode):
+    def render(self, objects: List[PyreeObject], camera: Camera, framebuffer) -> None:
+        projectionMatrix = camera.projectionMatrix
+        viewMatrix = camera.viewMatrix
+
+        for object in objects:
+            object.render(projectionMatrix * viewMatrix)
 
