@@ -119,7 +119,7 @@ class LaunchOptions:
 
 class Camera():
     def __init__(self) -> None:
-        self.projectionMatrix = None
+        self.projectionMatrix = np.identity(4)
         self.viewMatrix = None
         self.pos = Vec3()
 
