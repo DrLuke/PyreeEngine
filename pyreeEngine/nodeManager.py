@@ -308,6 +308,8 @@ class NodeManager():
                             self.patchNodeSignals(nodeHandler.nodeDef)
                             if not nodeHandler.inited:
                                 nodeHandler.nodeInstance.init()
+                        if nodeHandler.nodeDef.guid == self.project.entry["guid"]:
+                            self.prepareEntry()
 
         if self.entryMethod is not None:
             self.entryMethod()
