@@ -160,6 +160,22 @@ class PerspectiveCamera(Camera):
                                            [0, 0, zz, zw],
                                            [0, 0, -1, 0]])
 
+
+class OrthoCamera(Camera):
+    def __init__(self):
+        super(OrthoCamera, self).__init__()
+
+        self.setOrtho(1, 640/480, 0.01, 100.)
+
+    def setOrtho(self, sizeY, aspect, nearZ, farZ):
+        t,b = sizeY / 2, -sizeY / 2
+        r,l = t*aspect, b*aspect
+        self.projectionMatrix = np.matrix([[2/(r-l), 0,       0,               -(r+l)/(r-l)],
+                                           [0,       2/(t-b), 0,               -(t+b)/(t-b)],
+                                           [0,       0,       -2/(farZ-nearZ), -(farZ + nearZ)/(farZ - nearZ)],
+                                           [0,       0,       0,               1]])
+
+
 from pyreeEngine.nodeManager import NodeManager
 class Engine():
     def __init__(self, config: LaunchOptions):
