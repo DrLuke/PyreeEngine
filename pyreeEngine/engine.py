@@ -179,35 +179,32 @@ class OrthoCamera(Camera):
 from pyreeEngine.nodeManager import NodeManager
 class Engine():
     def __init__(self, config: LaunchOptions):
-        ### Project management
-        self.nodeMan = NodeManager(config.projectPath)
-
-        while(True):
-
-            self.nodeMan.tick()
-
-            time.sleep(0.01)
-
 
         ####################
         # TODO: Init glfw and opengl
         glfw.init()     # TODO: Check if init successful, exit otherwise
 
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 5)
+        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+        glfw.window_hint(glfw.SAMPLES, 4)
+
         self.window = glfw.create_window(640, 480, "PyreeEngine", None, None)
 
 
-        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
-        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
-        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-
         glfw.make_context_current(self.window)
 
+        glEnable(GL_MULTISAMPLE)
         glEnable(GL_DEPTH_TEST)
 
         self.init()
 
+        ### Project management
+        self.nodeMan = NodeManager(config.projectPath)
+
         while(not glfw.window_should_close(self.window)):
             self.mainLoop()
+
 
     def init(self):
         pass
@@ -232,7 +229,7 @@ class Engine():
         time.sleep(0.01)    # TODO: Proper frame limiting
 
     def loop(self):
-        self.render([], PerspectiveCamera())
+        self.nodeMan.tick()
 
     def render(self, objects: List[PyreeObject], camera: Camera, framebuffer) -> None:
         projectionMatrix = camera.projectionMatrix
