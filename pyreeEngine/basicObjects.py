@@ -6,7 +6,7 @@ from OpenGL.GL import shaders
 
 
 from pyreeEngine.util import ObjLoader
-from pyreeEngine.engine import DeferredShader, ModelObject
+from pyreeEngine.engine import DebugShader, ModelObject
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +21,9 @@ class ModelObject(ModelObject):
 
         self.tricount = None
 
-        self.shaderProgram = DeferredShader.getShaderProgram()
+        self.textures = []
+
+        self.shaderProgram = DebugShader.getShaderProgram()
 
         if pathToObj is not None:
             self.loadFromObj(pathToObj)
@@ -37,23 +39,25 @@ class ModelObject(ModelObject):
             verts = np.array(verts, np.float32)
         self.tricount = int(len(verts) / 8)
 
-        self.vbo = glGenBuffers(1)
+        if self.vbo is None:
+            self.vbo = glGenBuffers(1)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, verts.nbytes, verts, GL_STATIC_DRAW)
 
-        self.vao = glGenVertexArrays(1)
-        glBindVertexArray(self.vao)
+        if self.vao is None:
+            self.vao = glGenVertexArrays(1)
+            glBindVertexArray(self.vao)
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(0))  # XYZ
-        glEnableVertexAttribArray(0)
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(0))  # XYZ
+            glEnableVertexAttribArray(0)
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(3 * verts.itemsize))  # UV
-        glEnableVertexAttribArray(1)
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(3 * verts.itemsize))  # UV
+            glEnableVertexAttribArray(1)
 
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize,
-                              ctypes.c_void_p(5 * verts.itemsize))  # Normal
-        glEnableVertexAttribArray(2)
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize,
+                                  ctypes.c_void_p(5 * verts.itemsize))  # Normal
+            glEnableVertexAttribArray(2)
 
     def render(self, viewProjMatrix):
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
