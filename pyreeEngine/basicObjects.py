@@ -65,6 +65,13 @@ class ModelObject(ModelObject):
         if not uniformLoc == -1:
             glUniformMatrix4fv(uniformLoc, 1, GL_TRUE, viewProjMatrix*self.getModelMatrix())
 
+        texUnit = GL_TEXTURE0
+        for tex in self.textures:
+            glActiveTexture(texUnit)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            texUnit += 1
+
+
         glDrawArrays(GL_TRIANGLES, 0, self.tricount)
 
     def __del__(self):
