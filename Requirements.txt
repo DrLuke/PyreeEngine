@@ -5,3 +5,4 @@ numpy-quaternion
 glfw
 numba
 inotify_simple
+pillow
