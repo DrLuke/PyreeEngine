@@ -1,7 +1,7 @@
 from typing import Union, Type, List, Callable
 import inspect
 
-from pyreeEngine.engine import Framebuffer, Camera, PyreeObject
+from pyreeEngine.engine import Framebuffer, Camera, PyreeObject, NodeGlobalData
 
 
 class execType():
@@ -55,9 +55,8 @@ class BaseNodeMetaclass(type):
 
 
 class BaseNode(metaclass=BaseNodeMetaclass):
-    def __init__(self):
-        pass
-        #self.init()
+    def __init__(self, globdata:NodeGlobalData):
+        self.globalData = globdata
 
     def init(self):
         pass

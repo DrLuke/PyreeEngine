@@ -15,6 +15,7 @@ import types
 import time
 
 from pyreeEngine.node import BaseNode
+from pyreeEngine.engine import NodeGlobalData
 
 from pyreeEngine import log
 
@@ -125,9 +126,10 @@ class ModuleWatcher():
 
 class NodeHandler():
     """Manages node instance"""
-    def __init__(self, nodedef: NodeDefinition, modulewatch: ModuleWatcher):
+    def __init__(self, nodedef: NodeDefinition, modulewatch: ModuleWatcher, globdata:NodeGlobalData):
         self.nodeDef = nodedef
         self.moduleWatch = modulewatch
+        self.globalData = globdata
         self.nodeClass = None
         self.nodeInstance = None    # type: BaseNode
         self.valid = False
@@ -152,7 +154,7 @@ class NodeHandler():
         del self.nodeInstance
 
         try:
-            self.nodeInstance = newClass()
+            self.nodeInstance = newClass(self.globalData)
             self.inited = False
             self.nodeClass = newClass
         except Exception as exc:
@@ -176,7 +178,7 @@ Manages reloading nodes
 4: Run instances of classes in set order
 """
 class NodeManager():
-    def __init__(self, projectpath:Path):
+    def __init__(self, projectpath:Path, globdata:NodeGlobalData):
         """Initialize ModuleManager
 
         :param projectpath: Path to project file
@@ -184,6 +186,8 @@ class NodeManager():
         """
         self.projectPath = projectpath
         self.project = None
+
+        self.globalData = globdata
 
         self.nodeDefinitions = set()    # type: set
         self.signalDefinitions = set()  # type: set
@@ -301,7 +305,7 @@ class NodeManager():
 
     def initNodeHandler(self, nodedef, modulewatch) -> bool:
         if nodedef not in self.nodeHandlers:
-            self.nodeHandlers[nodedef] = NodeHandler(nodedef, modulewatch)
+            self.nodeHandlers[nodedef] = NodeHandler(nodedef, modulewatch, self.globalData)
         else:
             print("WARNING: NodeHandler for nodeDef already exists! %s %s %s %s" % (nodedef.name, nodedef.modulePath, nodedef.className, nodedef.guid))
 

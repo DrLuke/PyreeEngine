@@ -289,6 +289,17 @@ class OrthoCamera(Camera):
                                            [0,       0,       0,               1]])
 
 
+class NodeGlobalData():
+    def __init__(self):
+        self.resolution = [1, 1]
+        self.time = 0
+        self.dt = 0.01
+        self.resChanged = True
+        self.aspect = 1
+
+        self.otherData = {}
+
+
 from pyreeEngine.nodeManager import NodeManager
 class Engine():
     def __init__(self, config: LaunchOptions):
@@ -304,6 +315,8 @@ class Engine():
 
         self.window = glfw.create_window(640, 480, "PyreeEngine", None, None)
 
+        glfw.set_framebuffer_size_callback(self.window, self.framebufferResizeCallback)
+
 
         glfw.make_context_current(self.window)
 
@@ -313,7 +326,10 @@ class Engine():
         self.init()
 
         ### Project management
-        self.nodeMan = NodeManager(config.projectPath)
+        self.globalData = NodeGlobalData()
+        self.globalData.resolution = [640, 480]
+        self.globalData.time = glfw.get_time()
+        self.nodeMan = NodeManager(config.projectPath, self.globalData)
 
         while(not glfw.window_should_close(self.window)):
             self.mainLoop()
@@ -330,16 +346,27 @@ class Engine():
 
         glfw.poll_events()
 
+        newtime = glfw.get_time()
+        self.globalData.dt = newtime - self.globalData.time
+        self.globalData.time = newtime
+
         glClearColor(0.2, 0.2, 0.3, 1.)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        glViewport(0, 0, 640, 480)
+        glViewport(0, 0, self.globalData.resolution[0], self.globalData.resolution[1])
 
         self.loop()
 
         glfw.swap_buffers(self.window)
 
-        time.sleep(0.01)    # TODO: Proper frame limiting
+        self.globalData.resChanged = False
+
+        time.sleep(max(0, 1/60 - self.globalData.dt))    # TODO: Proper frame limiting
+
+    def framebufferResizeCallback(self, window, width, height):
+        self.globalData.resChanged = True
+        self.globalData.resolution = [width, height]
+        self.globalData.aspect = width/height
 
     def loop(self):
         self.nodeMan.tick()
