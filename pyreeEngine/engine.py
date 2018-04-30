@@ -361,7 +361,7 @@ class Engine():
 
         self.globalData.resChanged = False
 
-        time.sleep(max(0, 1/60 - self.globalData.dt))    # TODO: Proper frame limiting
+        glfw.swap_interval(1)
 
     def framebufferResizeCallback(self, window, width, height):
         self.globalData.resChanged = True
