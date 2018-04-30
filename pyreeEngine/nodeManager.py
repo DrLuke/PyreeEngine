@@ -5,6 +5,7 @@ from pyreeEngine.project import Project
 
 import importlib
 import sys
+import traceback
 
 from inotify_simple import INotify, flags, masks
 import inotify_simple
@@ -152,9 +153,11 @@ class NodeHandler():
             self.nodeInstance = newClass()
             self.inited = False
             self.nodeClass = newClass
-        except:
+        except Exception as exc:
             print("ERROR: Exception on instance reload")
-            #TODO: Print stack trace here
+            print(traceback.format_exc(), file=sys.stderr)
+            print(exc, file=sys.stderr)
+            return
 
         if oldData is not None:
             self.nodeInstance.setData(oldData)
@@ -271,7 +274,12 @@ class NodeManager():
     def initNodes(self):
         for nodehandler in self.nodeHandlers.values():
             if not nodehandler.inited:
-                nodehandler.nodeInstance.init()
+                try:
+                    nodehandler.nodeInstance.init()
+                except Exception as exc:
+                    print("ERROR: Node init() failed")
+                    print(traceback.format_exc(), file=sys.stderr)
+                    print(exc, file=sys.stderr)
 
     def initModuleWatch(self, nodeDef) -> bool:
         # Check if module already is being watched
