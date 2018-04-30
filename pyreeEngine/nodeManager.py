@@ -194,6 +194,7 @@ class NodeManager():
         self.projecti = None
         self.installProjectWatch()
 
+        self.entryNode = None
         self.entryMethod = None
 
         self.loadProject()
@@ -279,8 +280,12 @@ class NodeManager():
             if not nodehandler.inited:
                 try:
                     nodehandler.nodeInstance.init()
+                    nodehandler.inited = True
                 except Exception as exc:
-                    print("ERROR: Node init() failed")
+                    nodehandler.valid = False
+                    self.patchNodeSignals(nodehandler.nodeDef)
+                    log.warning("NodeMan", "Node disabled: %s" % nodehandler.nodeDef)
+                    log.error("NodeMan", "Node exception on init(): %s" % nodehandler.nodeDef)
                     print(traceback.format_exc(), file=sys.stderr)
                     print(exc, file=sys.stderr)
 
@@ -312,18 +317,31 @@ class NodeManager():
 
         for modulewatcher in self.moduleWatchers.values():
             if modulewatcher.checkFileWatch():  # Module has been reloaded -> reload all nodes from this module
-                for nodeHandler in self.nodeHandlers.values():
-                    if nodeHandler.moduleWatch is modulewatcher:
-                        nodeHandler.reloadInstance()
-                        if nodeHandler.valid:
-                            self.patchNodeSignals(nodeHandler.nodeDef)
-                            if not nodeHandler.inited:
-                                nodeHandler.nodeInstance.init()
-                        if nodeHandler.nodeDef.guid == self.project.entry["guid"]:
+                for nodehandler in self.nodeHandlers.values():
+                    if nodehandler.moduleWatch is modulewatcher:
+                        nodehandler.reloadInstance()
+                        if nodehandler.valid:
+                            self.patchNodeSignals(nodehandler.nodeDef)
+                            if not nodehandler.inited:
+                                try:
+                                    nodehandler.nodeInstance.init()
+                                    nodehandler.inited = True
+                                except Exception as exc:
+                                    nodehandler.valid = False
+                                    self.patchNodeSignals(nodehandler.nodeDef)
+                                    log.warning("NodeMan", "Node disabled: %s" % nodehandler.nodeDef)
+                                    log.error("NodeMan", "Node exception on init(): %s" % nodehandler.nodeDef)
+                                    print(traceback.format_exc(), file=sys.stderr)
+                                    print(exc, file=sys.stderr)
+                        if nodehandler.nodeDef.guid == self.project.entry["guid"]:
                             self.prepareEntry()
 
         if self.entryMethod is not None:
-            self.entryMethod()
+            if self.entryNode.valid:
+                self.entryMethod()  # TODO: try except crash-resistance
+            else:
+                log.error("NodeMan", "Entry node invalid %s" % self.entryNode.nodeDef)
+                self.entryMethod = None
 
     def patchNodeSignals(self, nodedef: NodeDefinition):
         for signalDef in self.signalDefinitions:
@@ -367,8 +385,10 @@ class NodeManager():
             if nodedef.guid == self.project.entry["guid"]:
                 if self.project.entry["sigName"] in self.nodeHandlers[nodedef].nodeClass.__signalInputs__:
                     entryFunc = self.nodeHandlers[nodedef].nodeClass.__signalInputs__[self.project.entry["sigName"]][0]
+                    self.entryNode = self.nodeHandlers[nodedef]
                     self.entryMethod = getattr(self.nodeHandlers[nodedef].nodeInstance, entryFunc.__name__)
                     return
+        self.entryNode = None
         self.entryMethod = None
         print("ERROR: Entrypoint not found! guid:%s signame:%s" % (self.project.entry["guid"], self.project.entry["sigName"]))
         log.warning("NodeMan", "Program execution halted due to missing entry function")
