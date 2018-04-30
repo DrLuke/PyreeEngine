@@ -66,3 +66,7 @@ class ModelObject(ModelObject):
             glUniformMatrix4fv(uniformLoc, 1, GL_TRUE, viewProjMatrix*self.getModelMatrix())
 
         glDrawArrays(GL_TRIANGLES, 0, self.tricount)
+
+    def __del__(self):
+        glDeleteBuffers([self.vbo])
+        glDeleteVertexArrays([self.vao])
