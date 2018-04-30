@@ -16,6 +16,8 @@ import time
 
 from pyreeEngine.node import BaseNode
 
+from pyreeEngine import log
+
 
 class NodeDefinition():
     def __init__(self, data):
@@ -144,7 +146,7 @@ class NodeHandler():
         newClass = self.moduleWatch.getClass(self.nodeDef.className)
 
         if not issubclass(newClass, BaseNode):
-            print("NODEMAN: ERROR: Nodeclass '%s' from module '%s' is not subclass of BaseNode" % (self.nodeDef.className, self.moduleWatch.modulePath))
+            log.error("NodeMan", "Nodeclass '%s' from module '%s' is not subclass of BaseNode" % (self.nodeDef.className, self.moduleWatch.modulePath))
             return False
 
         del self.nodeInstance
@@ -154,14 +156,15 @@ class NodeHandler():
             self.inited = False
             self.nodeClass = newClass
         except Exception as exc:
-            print("ERROR: Exception on instance reload")
             print(traceback.format_exc(), file=sys.stderr)
             print(exc, file=sys.stderr)
+            log.error("NodeMan", "Node instantiation failed. Module: %s Node: %s" % (self.nodeDef.modulePath, self.nodeDef.className))
             return
 
         if oldData is not None:
             self.nodeInstance.setData(oldData)
         self.valid = True
+        log.success("NodeMan", "Succesful node reinstantiation %s" % self.nodeDef)
 
 
 """
@@ -205,7 +208,7 @@ class NodeManager():
             self.loadProject()
 
     def loadProject(self):
-        print("NODEMAN: Reloading Project")
+        log.info("NodeMan", "Reloading project")
         self.project = Project(self.projectPath)    # TODO: Check if project is valid, keep using old one if error occurs
 
         self.parseNodeDefinitions()
@@ -368,4 +371,4 @@ class NodeManager():
                     return
         self.entryMethod = None
         print("ERROR: Entrypoint not found! guid:%s signame:%s" % (self.project.entry["guid"], self.project.entry["sigName"]))
-        print("WARNING: Program execution halted due to missing entry")
+        log.warning("NodeMan", "Program execution halted due to missing entry function")
