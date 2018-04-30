@@ -40,55 +40,55 @@ class Texture():
         self.height = None  # type: int
         self.width = None   # type: int
         self.depth = None   # type: int
-        self.textures = None    # type: List
-        self.targetType = Texture.TexTarget.texture2D   # Default texture is regular 2D texture
+        self.textures = None    # type: Union[int, List[int]]
+        self.targetType = Texture.TexTarget.texture2D.value   # Default texture is regular 2D texture
 
     def getTexture(self) -> Union[int, List[int]]:
         """Returns textures, and checks if they need updating"""
-        pass
+        return self.textures
 
     def textureGen(self):
         """Generator for returning ALL textures related to this container"""
         for tex in self.textures:
             yield tex
 
-    def setMagFilter(self, filterMode: int=GL_NEAREST):
-        if filterMode in [x.value for x in Texture.Filter]:
+    def setMagFilter(self, filterMode: Filter=Filter.linearMipmapLinear):
+        if filterMode.value in [x.value for x in Texture.Filter]:
             for tex in self.textureGen():
-                glBindTexture(tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_MIN_FILTER, filterMode)
+                glBindTexture(self.targetType, tex)
+                glTexParameterf(self.targetType, GL_TEXTURE_MIN_FILTER, filterMode.value)
         else:
             raise ValueError("Invalid filterMode (filtermode=%s)" % filterMode)
 
-    def setMinFilter(self, filterMode: int=GL_NEAREST):
-        if filterMode in [x.value for x in Texture.Filter]:
+    def setMinFilter(self, filterMode: int=GL_LINEAR_MIPMAP_LINEAR):
+        if filterMode.value in [x.value for x in Texture.Filter]:
             for tex in self.textureGen():
-                glBindTexture(tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_MAG_FILTER, filterMode)
+                glBindTexture(self.targetType, tex)
+                glTexParameterf(self.targetType, GL_TEXTURE_MAG_FILTER, filterMode.value)
         else:
             raise ValueError("Invalid filterMode (filtermode=%s)" % filterMode)
 
-    def setSWrap(self, wrapMode: int=GL_REPEAT):
-        if wrapMode in [x.value for x in Texture.Wrapping]:
+    def setSWrap(self, wrapMode=Wrapping.repeat):
+        if wrapMode.value in [x.value for x in Texture.Wrapping]:
             for tex in self.textureGen():
-                glBindTexture(tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_WRAP_S, wrapMode)
+                glBindTexture(self.targetType, tex)
+                glTexParameteri(self.targetType, GL_TEXTURE_WRAP_S, wrapMode.value)
         else:
             raise ValueError("Invalid wrapMode (wrapMode=%s)" % wrapMode)
 
-    def setTWrap(self, wrapMode: int=GL_REPEAT):
-        if wrapMode in [x.value for x in Texture.Wrapping]:
+    def setTWrap(self, wrapMode=Wrapping.repeat):
+        if wrapMode.value in [x.value for x in Texture.Wrapping]:
             for tex in self.textureGen():
-                glBindTexture(tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_WRAP_T, wrapMode)
+                glBindTexture(self.targetType, tex)
+                glTexParameterf(self.targetType, GL_TEXTURE_WRAP_T, wrapMode.value)
         else:
             raise ValueError("Invalid wrapMode (wrapMode=%s)" % wrapMode)
 
-    def setRWrap(self, wrapMode: int=GL_REPEAT):
-        if wrapMode in [x.value for x in Texture.Wrapping]:
+    def setRWrap(self, wrapMode=Wrapping.repeat):
+        if wrapMode.value in [x.value for x in Texture.Wrapping]:
             for tex in self.textureGen():
-                glBindTexture(tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_WRAP_R, wrapMode)
+                glBindTexture(self.targetType, tex)
+                glTexParameterf(self.targetType, GL_TEXTURE_WRAP_R, wrapMode.value)
         else:
             raise ValueError("Invalid wrapMode (wrapMode=%s)" % wrapMode)
 
