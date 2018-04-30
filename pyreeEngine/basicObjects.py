@@ -79,5 +79,5 @@ class ModelObject(ModelObject):
         glDrawArrays(GL_TRIANGLES, 0, self.tricount)
 
     def __del__(self):
-        glDeleteBuffers([self.vbo])
-        glDeleteVertexArrays([self.vao])
+        glDeleteBuffers(1, [self.vbo])
+        glDeleteVertexArrays(1, [self.vao])
