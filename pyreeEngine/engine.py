@@ -176,6 +176,7 @@ class HotloadingShader():
 class PyreeObject():
     def __init__(self):
         self.children = []
+        self.parent = None
         self.pos = Vec3()
         self.rot = np.quaternion(1, 0, 0, 0)
         self.scale = Vec3(1, 1, 1)
@@ -184,17 +185,26 @@ class PyreeObject():
         pass
 
     def getModelMatrix(self) -> np.matrix:
-        translationMat = np.matrix([[1, 0, 0, self.pos[0]],
-                                    [0, 1, 0, self.pos[1]],
-                                    [0, 0, 1, self.pos[2]],
+        pos = self.pos
+        if self.parent is not None:
+            pos += self.parent.pos
+        translationMat = np.matrix([[1, 0, 0, pos[0]],
+                                    [0, 1, 0, pos[1]],
+                                    [0, 0, 1, pos[2]],
                                     [0, 0, 0, 1]])
 
         orientMat = np.identity(4)
-        orientMat[:3, :3] = quaternion.as_rotation_matrix(self.rot)
+        rot = self.rot
+        if self.parent is not None:
+            rot = rot * self.parent.rot
+        orientMat[:3, :3] = quaternion.as_rotation_matrix(rot)
 
-        scaleMat = np.matrix([[self.scale[0], 0, 0, 0],
-                              [0, self.scale[1], 0, 0],
-                              [0, 0, self.scale[2], 0],
+        scale = self.scale
+        if self.parent is not None:
+            scale *= self.parent.scale
+        scaleMat = np.matrix([[scale[0], 0, 0, 0],
+                              [0, scale[1], 0, 0],
+                              [0, 0, scale[2], 0],
                               [0, 0, 0, 1]])
 
         return translationMat * orientMat * scaleMat
