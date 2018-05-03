@@ -56,7 +56,7 @@ class Texture():
         if filterMode.value in [x.value for x in Texture.Filter]:
             for tex in self.textureGen():
                 glBindTexture(self.targetType, tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_MIN_FILTER, filterMode.value)
+                glTexParameterf(self.targetType, GL_TEXTURE_MAG_FILTER, filterMode.value)
         else:
             raise ValueError("Invalid filterMode (filtermode=%s)" % filterMode)
 
@@ -64,7 +64,7 @@ class Texture():
         if filterMode.value in [x.value for x in Texture.Filter]:
             for tex in self.textureGen():
                 glBindTexture(self.targetType, tex)
-                glTexParameterf(self.targetType, GL_TEXTURE_MAG_FILTER, filterMode.value)
+                glTexParameterf(self.targetType, GL_TEXTURE_MIN_FILTER, filterMode.value)
         else:
             raise ValueError("Invalid filterMode (filtermode=%s)" % filterMode)
 
@@ -125,3 +125,29 @@ class TextureFromImage(Texture):
 class HotloadingTextureFromImage(TextureFromImage):
     def __init__(self, path: Path):
         super(HotloadingTextureFromImage, self).__init__(path)
+
+class RandomRGBATexture(Texture):
+    def __init__(self, size):
+        super(RandomRGBATexture, self).__init__()
+        self.shape = (size[0], size[1], 4)
+
+        self.genRandom()
+
+    def genRandom(self):
+        imdata = np.random.random_sample(self.shape)
+
+        if self.textures is not None:
+            glDeleteTextures(self.textures)    # Clean up old texture
+        self.textures = glGenTextures(1)
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+        glBindTexture(GL_TEXTURE_2D, self.textures)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, imdata.shape[0], imdata.shape[1], 0, GL_RGBA, GL_FLOAT, imdata.flatten())
+        glGenerateMipmap(GL_TEXTURE_2D)
+
+    def getTexture(self):
+        return self.textures
