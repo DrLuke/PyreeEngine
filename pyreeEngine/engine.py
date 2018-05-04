@@ -209,9 +209,9 @@ class PyreeObject():
 
         return translationMat * orientMat * scaleMat
 
-class ModelObject(PyreeObject):
+class GeometryObject(PyreeObject):
     def __init__(self):
-        super(ModelObject, self).__init__()
+        super(GeometryObject, self).__init__()
 
 class LightObject(PyreeObject):
     def __init__(self):

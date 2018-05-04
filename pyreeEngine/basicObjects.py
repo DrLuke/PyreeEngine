@@ -6,13 +6,13 @@ from OpenGL.GL import shaders
 
 
 from pyreeEngine.util import ObjLoader
-from pyreeEngine.engine import DebugShader, ModelObject
+from pyreeEngine.engine import DebugShader, GeometryObject
 from pathlib import Path
 
 import numpy as np
 
 
-class ModelObject(ModelObject):
+class ModelObject(GeometryObject):
     def __init__(self, pathToObj: Path=None):
         super(ModelObject, self).__init__()
 
