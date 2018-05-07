@@ -61,6 +61,9 @@ class BaseNode(metaclass=BaseNodeMetaclass):
     def init(self):
         pass
 
+    def register(self):
+        self.globalData.__PYREE__lasttarget__ = self
+
     def getData(self):
         """Get data to restore new instance of class
 

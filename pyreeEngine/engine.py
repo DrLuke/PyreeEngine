@@ -301,6 +301,8 @@ class OrthoCamera(Camera):
 
 class NodeGlobalData():
     def __init__(self):
+        self.__PYREE__lasttarget__ = None
+
         self.resolution = [1, 1]
         self.time = 0
         self.dt = 0.01

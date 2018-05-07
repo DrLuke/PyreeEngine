@@ -342,7 +342,23 @@ class NodeManager():
 
         if self.entryMethod is not None:
             if self.entryNode.valid:
-                self.entryMethod()  # TODO: try except crash-resistance
+                try:
+                    self.entryMethod()  # TODO: try except crash-resistance
+                except Exception as exc:
+                    print(traceback.format_exc(), file=sys.stderr)
+                    print(exc, file=sys.stderr)
+                    log.error("NodeMan", "Exception in node: ")
+
+                    nodedeftorepatch = None
+                    for nodehandler in self.nodeHandlers.values():
+                        if nodehandler.nodeInstance is self.globalData.__PYREE__lasttarget__:
+                            nodehandler.valid = False
+                            nodedeftorepatch = nodehandler.nodeDef
+                            break
+
+                    if nodedeftorepatch is not None:
+                        self.patchNodeSignals(nodedeftorepatch)
+
             else:
                 log.error("NodeMan", "Entry node invalid %s" % self.entryNode.nodeDef)
                 self.entryMethod = None
@@ -373,12 +389,16 @@ class NodeManager():
         if signaldef.sigtype == "signal":
             if hasattr(nodeHandlerTarget.nodeClass, inputMethod.__name__):
                 setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
+                #inputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
+                #inputMethod.__PYREE__globdata__ = self.globalData
             else:
                 print("ERROR: Function is not an attribute")
             return True
         elif signaldef.sigtype == "exec":
             if hasattr(nodeHandlerSource.nodeClass, outputMethod.__name__):
                 setattr(nodeHandlerSource.nodeClass, outputMethod.__name__, inputMethod)
+                #outputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
+                #outputMethod.__PYREE__globdata__ = self.globalData
             else:
                 print("ERROR: Function is not an attribute")
             return True
