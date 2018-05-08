@@ -386,23 +386,25 @@ class NodeManager():
             return False
 
         if signaldef.sourceSigName in nodeHandlerSource.nodeClass.__signalOutputs__ and signaldef.targetSigName in nodeHandlerTarget.nodeClass.__signalInputs__:
-            outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
-            inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
+            #outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
+            #inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
+            outputMethod = getattr(nodeHandlerSource.nodeInstance, nodeHandlerSource.nodeInstance.__signalOutputs__[signaldef.sourceSigName][0].__name__)
+            inputMethod = getattr(nodeHandlerTarget.nodeInstance, nodeHandlerTarget.nodeInstance.__signalInputs__[signaldef.targetSigName][0].__name__)
         else:
             print("ERROR: Inputs/Outputs not found")    # TODO: More elaborate error message
             return False
 
         if signaldef.sigtype == "signal":
-            if hasattr(nodeHandlerTarget.nodeClass, inputMethod.__name__):
-                setattr(nodeHandlerTarget.nodeClass, inputMethod.__name__, outputMethod)
+            if hasattr(nodeHandlerTarget.nodeInstance, inputMethod.__name__):
+                setattr(nodeHandlerTarget.nodeInstance, inputMethod.__name__, outputMethod)
                 #inputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
                 #inputMethod.__PYREE__globdata__ = self.globalData
             else:
                 print("ERROR: Function is not an attribute")
             return True
         elif signaldef.sigtype == "exec":
-            if hasattr(nodeHandlerSource.nodeClass, outputMethod.__name__):
-                setattr(nodeHandlerSource.nodeClass, outputMethod.__name__, inputMethod)
+            if hasattr(nodeHandlerSource.nodeInstance, outputMethod.__name__):
+                setattr(nodeHandlerSource.nodeInstance, outputMethod.__name__, inputMethod)
                 #outputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
                 #outputMethod.__PYREE__globdata__ = self.globalData
             else:
