@@ -5,7 +5,8 @@ from OpenGL.GL import *
 from OpenGL.GL import shaders
 
 
-from pyreeEngine.util import ObjLoader
+#from pyreeEngine.util import ObjLoader
+from pyreeEngine.objloader import ObjLoader
 from pyreeEngine.engine import DebugShader, GeometryObject
 from pathlib import Path
 
@@ -29,8 +30,14 @@ class ModelObject(GeometryObject):
             self.loadFromObj(pathToObj)
 
 
+        self.uniforms = {}
+
+
     def loadFromObj(self, pathToObj: Path):
-        verts, texdata = ObjLoader(pathToObj)
+        vertlist = ObjLoader(pathToObj).verts
+        verts = []
+        for l in vertlist:
+            verts += l
         self.loadFromVerts(verts)
 
 
@@ -69,6 +76,20 @@ class ModelObject(GeometryObject):
         if not uniformLoc == -1:
             glUniformMatrix4fv(uniformLoc, 1, GL_TRUE, viewProjMatrix*self.getModelMatrix())
 
+        for uniformName in self.uniforms:
+            uniform = self.uniforms[uniformName]
+            uniformLoc = glGetUniformLocation(self.shaderProgram, uniformName)
+            if not uniformLoc == -1:
+                if type(uniform) == float or type(uniform) == int:
+                    glUniform1f(uniformLoc, float(uniform))
+                elif len(uniform) == 2:
+                    glUniform2f(uniformLoc, uniform[0], uniform[1])
+                elif len(uniform) == 3:
+                    glUniform3f(uniformLoc, uniform[0], uniform[1], uniform[2])
+                elif len(uniform) == 4:
+                    glUniform4f(uniformLoc, uniform[0], uniform[1], uniform[2], uniform[3])
+
+
         texUnit = GL_TEXTURE0
         for tex in self.textures:
             glActiveTexture(texUnit)
@@ -81,3 +102,16 @@ class ModelObject(GeometryObject):
     def __del__(self):
         glDeleteBuffers(1, [self.vbo])
         glDeleteVertexArrays(1, [self.vao])
+
+class FSQuad(ModelObject):
+    def __init__(self):
+        super(FSQuad, self).__init__()
+
+        verts = np.array([1, -1, 0, 1, 0, 0, 0, 1,
+                          -1, 1, 0, 0, 1, 0, 0, 1,
+                          -1, -1, 0, 0, 0, 0, 0, 1,
+                          1, -1, 0, 1, 0, 0, 0, 1,
+                          1, 1, 0, 1, 1, 0, 0, 1,
+                          -1, 1, 0, 0, 1, 0, 0, 1], np.float32)
+
+        self.loadFromVerts(verts)
