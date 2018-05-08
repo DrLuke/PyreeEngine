@@ -82,7 +82,13 @@ class ModuleWatcher():
                 print("ERROR: Module %s not found" % self.modulePath, file=sys.stderr)
                 return None
         elif type(self.module) is types.ModuleType:
-            importlib.reload(self.module)
+            try:
+                importlib.reload(self.module)
+            except Exception as exc:
+                print(traceback.format_exc(), file=sys.stderr)
+                print(exc, file=sys.stderr)
+                log.error("NodeMan", "Failed to reload module %s, old module persists!" % self.modulePath)
+                return None
         else:
             self.module = None  # Failback
         try:
