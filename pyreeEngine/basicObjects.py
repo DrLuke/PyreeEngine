@@ -100,8 +100,10 @@ class ModelObject(GeometryObject):
         glDrawArrays(GL_TRIANGLES, 0, self.tricount)
 
     def __del__(self):
-        glDeleteBuffers(1, [self.vbo])
-        glDeleteVertexArrays(1, [self.vao])
+        if self.vbo is not None:
+            glDeleteBuffers(1, [self.vbo])
+        if self.vao is not None:
+            glDeleteVertexArrays(1, [self.vao])
 
 class FSQuad(ModelObject):
     def __init__(self):
