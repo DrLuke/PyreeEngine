@@ -83,6 +83,9 @@ class BaseNode(metaclass=BaseNodeMetaclass):
 
 class RenderNode(BaseNode):
     def render(self, objects: List[PyreeObject], camera: Camera, framebuffer) -> None:
+        if framebuffer is not None:
+            framebuffer.bindFramebuffer()
+
         projectionMatrix = camera.projectionMatrix
         viewMatrix = camera.viewMatrix
 
