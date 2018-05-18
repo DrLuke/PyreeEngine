@@ -10,6 +10,8 @@ import time
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 
+import traceback, sys
+
 class DeferredShader():
     """Singleton class containing the default shader for deferred rendering. This way the shader program only has
     to exist once on the GPU."""
@@ -133,33 +135,38 @@ class HotloadingShader():
         self.regenShader()
 
     def regenShader(self):
-        if self.vertexPath.exists():
-            with self.vertexPath.open() as f:
-                self.vertShader = shaders.compileShader(f.read(), GL_VERTEX_SHADER)
-        else:
-            print("HOTLOADSHADER ERROR: vertex file doesn't exist")
-            return
-        if self.fragmentPath.exists():
-            with self.fragmentPath.open() as f:
-                self.fragShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
-        else:
-            print("HOTLOADSHADER ERROR: fragment file doesn't exist")
-            return
-
-        if self.geometryPath is not None:
-            if self.geometryPath.exists():
-                with self.geometryPath.open() as f:
-                    self.vertShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+        try:
+            if self.vertexPath.exists():
+                with self.vertexPath.open() as f:
+                    self.vertShader = shaders.compileShader(f.read(), GL_VERTEX_SHADER)
             else:
-                print("HOTLOADSHADER ERROR: geometry file doesn't exist")
+                print("HOTLOADSHADER ERROR: vertex file doesn't exist")
+                return
+            if self.fragmentPath.exists():
+                with self.fragmentPath.open() as f:
+                    self.fragShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+            else:
+                print("HOTLOADSHADER ERROR: fragment file doesn't exist")
                 return
 
-        if self.program is not None:
-            pass#glDeleteProgram(self.program)
-        if self.geometryPath is None:
-            self.program = shaders.compileProgram(self.vertShader, self.fragShader)
-        else:
-            self.program = shaders.compileProgram(self.vertShader, self.fragShader, self.geomShader)
+            if self.geometryPath is not None:
+                if self.geometryPath.exists():
+                    with self.geometryPath.open() as f:
+                        self.vertShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+                else:
+                    print("HOTLOADSHADER ERROR: geometry file doesn't exist")
+                    return
+
+            if self.program is not None:
+                pass#glDeleteProgram(self.program)
+            if self.geometryPath is None:
+                self.program = shaders.compileProgram(self.vertShader, self.fragShader)
+            else:
+                self.program = shaders.compileProgram(self.vertShader, self.fragShader, self.geomShader)
+        except Exception as exc:
+            print(traceback.format_exc(), file=sys.stderr)
+            print(exc, file=sys.stderr)
+
 
     def tick(self):
         events = self.inotify.read(0)
