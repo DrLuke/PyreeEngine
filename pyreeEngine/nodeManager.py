@@ -381,8 +381,14 @@ class NodeManager():
         nodeHandlerSource = self.nodeHandlers[nodeDefSource]    # type: NodeHandler
         nodeHandlerTarget = self.nodeHandlers[nodeDefTarget]    # type: NodeHandler
 
-        if not nodeHandlerSource.valid and not nodeHandlerTarget.valid:
-            print("ERROR: Nodehandlers not valid!")
+        if (not nodeHandlerSource.valid) or (not nodeHandlerTarget.valid):
+            print("ERROR: Nodehandlers not valid! Source: %s Target: %s" % (nodeHandlerSource.valid, nodeHandlerTarget.valid))
+            if signaldef.sigtype == "exec":
+                outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
+                print("Invalidating Exec: %s" % outputMethod)
+                if hasattr(nodeHandlerSource.nodeInstance, outputMethod.__name__):
+                    setattr(nodeHandlerSource.nodeInstance, outputMethod.__name__, lambda: None)
+
             return False
 
         if signaldef.sourceSigName in nodeHandlerSource.nodeClass.__signalOutputs__ and signaldef.targetSigName in nodeHandlerTarget.nodeClass.__signalInputs__:
