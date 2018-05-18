@@ -353,7 +353,7 @@ class NodeManager():
                 except Exception as exc:
                     print(traceback.format_exc(), file=sys.stderr)
                     print(exc, file=sys.stderr)
-                    log.error("NodeMan", "Exception in node: ")
+                    log.error("NodeMan", "Exception in node: %s" % self.globalData.__PYREE__lasttarget__)
 
                     nodedeftorepatch = None
                     for nodehandler in self.nodeHandlers.values():
@@ -386,17 +386,17 @@ class NodeManager():
             return False
 
         if signaldef.sourceSigName in nodeHandlerSource.nodeClass.__signalOutputs__ and signaldef.targetSigName in nodeHandlerTarget.nodeClass.__signalInputs__:
-            #outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
-            #inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
-            outputMethod = getattr(nodeHandlerSource.nodeInstance, nodeHandlerSource.nodeInstance.__signalOutputs__[signaldef.sourceSigName][0].__name__)
-            inputMethod = getattr(nodeHandlerTarget.nodeInstance, nodeHandlerTarget.nodeInstance.__signalInputs__[signaldef.targetSigName][0].__name__)
+            outputMethod = nodeHandlerSource.nodeClass.__signalOutputs__[signaldef.sourceSigName][0]
+            inputMethod = nodeHandlerTarget.nodeClass.__signalInputs__[signaldef.targetSigName][0]
+            boundOutputMethod = getattr(nodeHandlerSource.nodeInstance, nodeHandlerSource.nodeInstance.__signalOutputs__[signaldef.sourceSigName][0].__name__)
+            boundInputMethod = getattr(nodeHandlerTarget.nodeInstance, nodeHandlerTarget.nodeInstance.__signalInputs__[signaldef.targetSigName][0].__name__)
         else:
             print("ERROR: Inputs/Outputs not found")    # TODO: More elaborate error message
             return False
 
         if signaldef.sigtype == "signal":
             if hasattr(nodeHandlerTarget.nodeInstance, inputMethod.__name__):
-                setattr(nodeHandlerTarget.nodeInstance, inputMethod.__name__, outputMethod)
+                setattr(nodeHandlerTarget.nodeInstance, inputMethod.__name__, boundOutputMethod)
                 #inputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
                 #inputMethod.__PYREE__globdata__ = self.globalData
             else:
@@ -404,7 +404,7 @@ class NodeManager():
             return True
         elif signaldef.sigtype == "exec":
             if hasattr(nodeHandlerSource.nodeInstance, outputMethod.__name__):
-                setattr(nodeHandlerSource.nodeInstance, outputMethod.__name__, inputMethod)
+                setattr(nodeHandlerSource.nodeInstance, outputMethod.__name__, boundInputMethod)
                 #outputMethod.__PYREE__target__ = nodeHandlerTarget.nodeInstance
                 #outputMethod.__PYREE__globdata__ = self.globalData
             else:
