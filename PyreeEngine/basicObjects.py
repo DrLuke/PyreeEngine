@@ -1,13 +1,13 @@
 from typing import List
 
-from pyreeEngine.engine import PyreeObject
+from PyreeEngine.engine import PyreeObject
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 
 
 #from pyreeEngine.util import ObjLoader
-from pyreeEngine.objloader import ObjLoader
-from pyreeEngine.engine import DebugShader, GeometryObject
+from PyreeEngine.objloader import ObjLoader
+from PyreeEngine.engine import DebugShader, GeometryObject
 from pathlib import Path
 
 import numpy as np

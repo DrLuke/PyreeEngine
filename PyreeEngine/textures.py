@@ -1,6 +1,6 @@
 from typing import Union, List, Tuple, Callable, Optional
 
-from pyreeEngine.engine import PyreeObject
+from PyreeEngine.engine import PyreeObject
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 

@@ -2,7 +2,7 @@ from typing import Union, List, Tuple, Callable
 import numpy as np
 import quaternion
 import math
-from pyreeEngine.util import Vec3
+from PyreeEngine.util import Vec3
 
 import glfw
 import time
@@ -135,6 +135,7 @@ class HotloadingShader():
         self.regenShader()
 
     def regenShader(self):
+        print(self.fragmentPath);
         try:
             if self.vertexPath.exists():
                 with self.vertexPath.open() as f:
@@ -342,7 +343,7 @@ class NodeGlobalData():
         self.otherData = {}
 
 
-from pyreeEngine.nodeManager import NodeManager
+from PyreeEngine.nodeManager import NodeManager
 class Engine():
     def __init__(self, config: LaunchOptions):
 
@@ -359,7 +360,8 @@ class Engine():
         self.monitors = glfw.get_monitors()
 
 
-        self.window = glfw.create_window(1920, 1080, "PyreeEngine", self.monitors[1], None)
+        self.window = glfw.create_window(1920, 1200, "PyreeEngine", self.monitors[1], None)
+        #self.window = glfw.create_window(1280, 720, "PyreeEngine", None, None)
 
         glfw.set_framebuffer_size_callback(self.window, self.framebufferResizeCallback)
 
@@ -373,7 +375,7 @@ class Engine():
 
         ### Project management
         self.globalData = NodeGlobalData()
-        self.globalData.resolution = [640, 480]
+        self.globalData.resolution = [1280, 720]
         self.globalData.time = glfw.get_time()
         self.nodeMan = NodeManager(config.projectPath, self.globalData)
 
