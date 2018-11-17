@@ -1,8 +1,11 @@
-pyopengl
+PyOpenGL
 scipy
 numpy
 numpy-quaternion
 glfw
 numba
 inotify_simple
-pillow
+Pillow
+cffi
+mido
+python-rtmidi
