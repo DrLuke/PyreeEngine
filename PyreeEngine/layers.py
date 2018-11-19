@@ -26,6 +26,7 @@ from pathlib import Path
 import json
 
 import pythonosc.dispatcher
+import pythonosc.udp_client
 
 
 class LayerConfig(typing.NamedTuple):
@@ -35,12 +36,17 @@ class LayerConfig(typing.NamedTuple):
     filepath: Path = None  # Path to module
     entryclass: str = "LayerEntry"  # Class that is instantiated from layer as the main layer class
 
-    onloadoscpath: str = None  # OSC path to send message to on load
+    onloadoscpath: str = "/load"  # OSC path to send message to on load
     onloadoscmessage: str = "LOAD"  # Message to send on load to onloadoscpath
 
 
 class ProgramConfig(typing.NamedTuple):
     layerdefs: List[LayerConfig] = []  # Layers read from configpath
+
+    oscserveraddress: str = "127.0.0.1"     # IP address of OSC server
+    oscserverport: int = 1337               # Port of OSC server
+    oscclientaddress: str = "127.0.0.1"     # IP address of OSC client
+    oscclientport: int = 1337               # Port of OSC client
 
 
 class LayerContext():
@@ -53,7 +59,8 @@ class LayerContext():
         self.resolution: Tuple[int, int] = (800, 600)
         self.resolutionChangeCallbacks: List[types.FunctionType] = []
 
-        self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None
+        self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None  # Server for receiving messages
+        self.oscclient: pythonosc.udp_client.UDPClient = None       # Client for sending out messages
 
     def addresolutioncallback(self, newfunc:types.FunctionType):
         self.resolutionChangeCallbacks.append(newfunc)
