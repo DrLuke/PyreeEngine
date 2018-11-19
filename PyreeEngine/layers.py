@@ -2,7 +2,7 @@
 
 import types
 import typing
-from typing import List
+from typing import List, Tuple
 
 from pathlib import Path
 from PyreeEngine.project import Project
@@ -25,6 +25,8 @@ from pathlib import Path
 
 import json
 
+import pythonosc.dispatcher
+
 
 class LayerConfig(typing.NamedTuple):
     """Configuration for layers"""
@@ -42,10 +44,24 @@ class ProgramConfig(typing.NamedTuple):
 
 
 class LayerContext():
-    """Stores important runtime information, like the current resoliton or the OSC client"""
+    """Stores important runtime information, like the current resolution and the OSC dispatcher"""
 
     def __init__(self):
-        pass
+        self.time: float = 0.
+        self.dt: float = 1.
+
+        self.resolution: Tuple[int, int] = (800, 600)
+        self.resolutionChangeCallbacks: List[types.FunctionType] = []
+
+        self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None
+
+    def addresolutioncallback(self, newfunc:types.FunctionType):
+        self.resolutionChangeCallbacks.append(newfunc)
+
+    def setresolution(self, width, height):
+        self.resolution = (width, height)
+        for callback in self.resolutionChangeCallbacks:
+            callback(self.resolution)
 
 
 class BaseEntry():
@@ -71,12 +87,13 @@ class Layer():
     A layer represents a piece of code that is running within Pyree. Multiple layers can run sequentially to provide
     more complex behaviour."""
 
-    def __init__(self, config: LayerConfig):
+    def __init__(self, config: LayerConfig, context: LayerContext):
         self.enabled: bool = False  # Layer is currently being run
         self.valid: bool = False  # A layer is valid if it was imported successfully, and is invalidated on exceptions
         self.old: bool = False  # If a layer failed to reload, indicate that current module reflects old version
         self.tickfunction: types.FunctionType = None  # Function to call on tick
         self.config: LayerConfig = config
+        self.context: LayerContext = context
 
         self.inotify: INotify = None
         self.watch: int = None
@@ -133,7 +150,7 @@ class Layer():
 
         # Replace old instance with new instance
         try:
-            newinstance: BaseEntry = self.entryclass(None)  # TODO: add context here
+            newinstance: BaseEntry = self.entryclass(self.context)  # TODO: add context here
             if self.entryinstance is not None:
                 newinstance.__deserialize__(self.entryinstance.__serialize__())
             del self.entryinstance
@@ -175,8 +192,9 @@ class Layer():
 
 
 class LayerManager():
-    def __init__(self, config: ProgramConfig):
+    def __init__(self, config: ProgramConfig, context: LayerContext):
         self.config: ProgramConfig = config
+        self.context: LayerContext = context
         self.layers: List[Layer] = []
 
         self.loadlayers()
@@ -185,7 +203,7 @@ class LayerManager():
         for layerdef in self.config.layerdefs:
             layerdef["filepath"] = Path(layerdef["module"].replace(".", "/") + ".py")
             layerconf = LayerConfig(**layerdef)
-            newlayer = Layer(layerconf)
+            newlayer = Layer(layerconf, self.context)
             self.layers.append(newlayer)
 
     def tick(self):
