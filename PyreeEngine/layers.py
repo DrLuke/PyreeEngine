@@ -57,6 +57,7 @@ class LayerContext():
         self.dt: float = 1.
 
         self.resolution: Tuple[int, int] = (800, 600)
+        self.aspect = self.resolution[0] / self.resolution[1]
         self.resolutionChangeCallbacks: List[types.FunctionType] = []
 
         self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None  # Server for receiving messages
@@ -67,6 +68,7 @@ class LayerContext():
 
     def setresolution(self, width, height):
         self.resolution = (width, height)
+        self.aspect = self.resolution[0] / self.resolution[1]
         for callback in self.resolutionChangeCallbacks:
             callback(self.resolution)
 
