@@ -4,6 +4,8 @@ from OpenGL import GL
 
 import numpy as np
 
+from typing import NamedTuple
+
 def ObjLoader(objFilePath: Path):
     # TODO: Check if file is valid obj file, return None otherwise (general error handling would be nice :-)
     vertices = []
@@ -65,3 +67,6 @@ def Vec3(v0: Union[int, float]=0, v1: Union[int, float]=0, v2: Union[int, float]
 def Vec4(v0: Union[int, float]=0, v1: Union[int, float]=0, v2: Union[int, float]=0, v3: Union[int, float]=0):
     return np.array([v0, v1, v2, v3], np.float32)
 
+class Resolution(NamedTuple):
+    width: int = 800
+    height: int = 600
