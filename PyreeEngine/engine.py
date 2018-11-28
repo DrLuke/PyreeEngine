@@ -61,16 +61,6 @@ class LightObject(PyreeObject):
         super(LightObject, self).__init__()
 
 
-class LaunchOptions:
-    def __init__(self):
-        self.resolution = None
-        self.fullscreen = False
-        self.monitor = None
-
-        self.projectPath = None     # type: Path
-
-
-
 class NodeGlobalData():
     def __init__(self):
         self.__PYREE__lasttarget__ = None
