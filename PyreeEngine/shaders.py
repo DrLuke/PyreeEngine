@@ -1,15 +1,5 @@
 """Handy shader classes"""
 
-from typing import Union, List, Tuple, Callable, Dict
-import numpy as np
-import quaternion
-import math
-from PyreeEngine.util import Vec3
-from PyreeEngine.camera import *
-
-import glfw
-import ctypes
-import time
 
 from OpenGL.GL import *
 from OpenGL.GL import shaders
@@ -89,7 +79,6 @@ class HotloadingShader():
         self.regenShader()
 
     def regenShader(self):
-        print(self.fragmentPath);
         try:
             if self.vertexPath.exists():
                 with self.vertexPath.open() as f:
@@ -132,5 +121,6 @@ class HotloadingShader():
     def getShaderProgram(self):
         return self.program
 
-    #def __del__(self):
-    #    shaders.glDeleteShader(self.program)
+    def __del__(self):
+        if self.program:
+            shaders.glDeleteShader(self.program)
