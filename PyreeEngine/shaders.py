@@ -1,6 +1,5 @@
 """Handy shader classes"""
 
-
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 
@@ -10,7 +9,16 @@ from pathlib import Path
 
 import inotify_simple
 
-class DebugShader():
+
+class Shader():
+    def __init__(self):
+        self.shaderprogram: shaders.ShaderProgram = None
+
+    def getshaderprogram(self) -> shaders.ShaderProgram:
+        return self.shaderprogram
+
+
+class DebugShader(Shader):
     vertexCode = """#version 450 core
     layout (location = 0) in vec3 posIn;
     layout (location = 1) in vec2 uvIn;
@@ -47,8 +55,7 @@ class DebugShader():
     fragShader = None
     program = None
 
-    @staticmethod
-    def getShaderProgram():
+    def getshaderprogram(self):
         if DebugShader.program is None:
             DebugShader.vertShader = shaders.compileShader(DebugShader.vertexCode, GL_VERTEX_SHADER)
             DebugShader.fragShader = shaders.compileShader(DebugShader.fragCode, GL_FRAGMENT_SHADER)
@@ -56,9 +63,11 @@ class DebugShader():
 
         return DebugShader.program
 
-class HotloadingShader():
-    def __init__(self, vertexpath: Path, fragmentpath: Path, geometrypath: Path=None):
-        self.program = DebugShader.getShaderProgram()   # Have default shader program
+
+class HotloadingShader(Shader):
+    def __init__(self, vertexpath: Path, fragmentpath: Path, geometrypath: Path = None):
+        super(HotloadingShader, self).__init__()
+        self.shaderprogram = DebugShader().getshaderprogram()  # Have default shader program
         self.vertShader = None
         self.fragShader = None
         self.geomShader = None
@@ -101,26 +110,23 @@ class HotloadingShader():
                     print("HOTLOADSHADER ERROR: geometry file doesn't exist")
                     return
 
-            if self.program is not None:
-                pass#glDeleteProgram(self.program)
+            if self.shaderprogram is not None:
+                pass  # glDeleteProgram(self.program)
             if self.geometryPath is None:
-                self.program = shaders.compileProgram(self.vertShader, self.fragShader)
+                self.shaderprogram = shaders.compileProgram(self.vertShader, self.fragShader)
             else:
-                self.program = shaders.compileProgram(self.vertShader, self.fragShader, self.geomShader)
+                self.shaderprogram = shaders.compileProgram(self.vertShader, self.fragShader, self.geomShader)
         except Exception as exc:
             print(traceback.format_exc(), file=sys.stderr)
             print(exc, file=sys.stderr)
 
-
     def tick(self):
         events = self.inotify.read(0)
         for event in events:
-            if event.name == self.vertexPath.name or event.name == self.fragmentPath.name or (self.geometryPath is not None and self.geometryPath.name == self.geometryPath.name):
+            if event.name == self.vertexPath.name or event.name == self.fragmentPath.name or (
+                    self.geometryPath is not None and self.geometryPath.name == self.geometryPath.name):
                 self.regenShader()
 
-    def getShaderProgram(self):
-        return self.program
-
     def __del__(self):
-        if self.program:
-            shaders.glDeleteShader(self.program)
+        if self.shaderprogram:
+            pass  # shaders.glDeleteShader(self.program)
