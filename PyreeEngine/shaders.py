@@ -63,6 +63,53 @@ class DebugShader(Shader):
 
         return DebugShader.program
 
+class FullscreenTexture(Shader):
+    vertexCode = """#version 450 core
+        layout (location = 0) in vec3 posIn;
+        layout (location = 1) in vec2 uvIn;
+        layout (location = 2) in vec3 normIn;
+
+        layout (location = 0) out vec3 posOut;
+        layout (location = 1) out vec2 uvOut;
+        layout (location = 2) out vec3 normOut;
+
+        uniform mat4 MVP;
+
+        void main()
+        {
+            gl_Position = MVP * vec4(posIn, 1);
+            posOut = (MVP * vec4(posIn, 1)).xyz;
+            uvOut = uvIn;
+            normOut = normIn;
+        }
+        """
+
+    fragCode = """#version 450 core
+        layout (location = 0) in vec3 posIn;
+        layout (location = 1) in vec2 uvIn;
+        layout (location = 2) in vec3 normIn;
+        
+        layout(binding=0) uniform sampler2D tex1;
+        
+        layout (location = 0) out vec4 colorOut;
+        void main()
+        {
+            colorOut = texture(tex1, vec2(uvIn.x, uvIn.y)).rgba;
+            colorOut.a = 1.;
+        }
+        """
+
+    vertShader = None
+    fragShader = None
+    program = None
+
+    def getshaderprogram(self):
+        if FullscreenTexture.program is None:
+            FullscreenTexture.vertShader = shaders.compileShader(FullscreenTexture.vertexCode, GL_VERTEX_SHADER)
+            FullscreenTexture.fragShader = shaders.compileShader(FullscreenTexture.fragCode, GL_FRAGMENT_SHADER)
+            FullscreenTexture.program = shaders.compileProgram(FullscreenTexture.vertShader, FullscreenTexture.fragShader)
+
+        return FullscreenTexture.program
 
 class HotloadingShader(Shader):
     def __init__(self, vertexpath: Path, fragmentpath: Path, geometrypath: Path = None):
