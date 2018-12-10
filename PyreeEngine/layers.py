@@ -5,7 +5,6 @@ import typing
 from typing import List, Tuple
 
 from pathlib import Path
-from PyreeEngine.project import Project
 
 import importlib
 import sys
@@ -28,6 +27,7 @@ import json
 import pythonosc.dispatcher
 import pythonosc.udp_client
 
+from PyreeEngine.util import Resolution
 
 class LayerConfig(typing.NamedTuple):
     """Configuration for layers"""
@@ -43,10 +43,10 @@ class LayerConfig(typing.NamedTuple):
 class ProgramConfig(typing.NamedTuple):
     layerdefs: List[LayerConfig] = []  # Layers read from configpath
 
-    oscserveraddress: str = "127.0.0.1"     # IP address of OSC server
-    oscserverport: int = 1337               # Port of OSC server
-    oscclientaddress: str = "127.0.0.1"     # IP address of OSC client
-    oscclientport: int = 1337               # Port of OSC client
+    oscserveraddress: str = "127.0.0.1"  # IP address of OSC server
+    oscserverport: int = 1337  # Port of OSC server
+    oscclientaddress: str = "127.0.0.1"  # IP address of OSC client
+    oscclientport: int = 1337  # Port of OSC client
 
 
 class LayerContext():
@@ -56,19 +56,23 @@ class LayerContext():
         self.time: float = 0.
         self.dt: float = 1.
 
-        self.resolution: Tuple[int, int] = (800, 600)
-        self.aspect = self.resolution[0] / self.resolution[1]
+        self.resolution: Resolution = Resolution(width=800, height=600)
+        self.aspect = self.resolution.width / self.resolution.height
         self.resolutionChangeCallbacks: List[types.FunctionType] = []
 
         self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None  # Server for receiving messages
-        self.oscclient: pythonosc.udp_client.UDPClient = None       # Client for sending out messages
+        self.oscclient: pythonosc.udp_client.UDPClient = None  # Client for sending out messages
 
-    def addresolutioncallback(self, newfunc:types.FunctionType):
+    def addresolutioncallback(self, newfunc: types.FunctionType):
         self.resolutionChangeCallbacks.append(newfunc)
 
+    def removeresolutionscallback(self, removefunc: types.FunctionType):
+        if removefunc in self.resolutionChangeCallbacks:
+            self.resolutionChangeCallbacks.remove(removefunc)
+
     def setresolution(self, width, height):
-        self.resolution = (width, height)
-        self.aspect = self.resolution[0] / self.resolution[1]
+        self.resolution = Resolution(width=width, height=height)
+        self.aspect = self.resolution.width / self.resolution.height
         for callback in self.resolutionChangeCallbacks:
             callback(self.resolution)
 
@@ -123,6 +127,8 @@ class Layer():
         """Check iwatch and replace module if necessary"""
         if self.checkfilewatch():
             self.loadmodule()
+
+        self.entryinstance.tick()
 
     def loadmodule(self) -> bool:
         """Loads the module and extracts entry point class"""
