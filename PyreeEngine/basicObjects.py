@@ -4,17 +4,18 @@ from PyreeEngine.engine import PyreeObject
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 
-
-#from pyreeEngine.util import ObjLoader
+# from pyreeEngine.util import ObjLoader
 from PyreeEngine.objloader import ObjLoader
-from PyreeEngine.engine import DebugShader, GeometryObject
+from PyreeEngine.shaders import Shader, DebugShader
+from PyreeEngine.engine import GeometryObject
+from PyreeEngine.shaders import DebugShader
 from pathlib import Path
 
 import numpy as np
 
 
 class ModelObject(GeometryObject):
-    def __init__(self, pathToObj: Path=None):
+    def __init__(self, pathToObj: Path = None):
         super(ModelObject, self).__init__()
 
         self.vbo = None
@@ -24,14 +25,12 @@ class ModelObject(GeometryObject):
 
         self.textures = []
 
-        self.shaderProgram = DebugShader.getShaderProgram()
+        self.shader: Shader = DebugShader()
 
         if pathToObj is not None:
             self.loadFromObj(pathToObj)
 
-
         self.uniforms = {}
-
 
     def loadFromObj(self, pathToObj: Path):
         vertlist = ObjLoader(pathToObj).verts
@@ -39,7 +38,6 @@ class ModelObject(GeometryObject):
         for l in vertlist:
             verts += l
         self.loadFromVerts(verts)
-
 
     def loadFromVerts(self, verts: List[float]):
         if verts is not np.array:
@@ -59,7 +57,8 @@ class ModelObject(GeometryObject):
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(0))  # XYZ
             glEnableVertexAttribArray(0)
 
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize, ctypes.c_void_p(3 * verts.itemsize))  # UV
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * verts.itemsize,
+                                  ctypes.c_void_p(3 * verts.itemsize))  # UV
             glEnableVertexAttribArray(1)
 
             glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * verts.itemsize,
@@ -70,15 +69,15 @@ class ModelObject(GeometryObject):
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBindVertexArray(self.vao)
 
-        glUseProgram(self.shaderProgram)
+        glUseProgram(self.shader.getshaderprogram())
 
-        uniformLoc = glGetUniformLocation(self.shaderProgram, "MVP")
+        uniformLoc = glGetUniformLocation(self.shader.getshaderprogram(), "MVP")
         if not uniformLoc == -1:
-            glUniformMatrix4fv(uniformLoc, 1, GL_TRUE, viewProjMatrix*self.getModelMatrix())
+            glUniformMatrix4fv(uniformLoc, 1, GL_TRUE, viewProjMatrix * self.getModelMatrix())
 
         for uniformName in self.uniforms:
             uniform = self.uniforms[uniformName]
-            uniformLoc = glGetUniformLocation(self.shaderProgram, uniformName)
+            uniformLoc = glGetUniformLocation(self.shader.getshaderprogram(), uniformName)
             if not uniformLoc == -1:
                 if type(uniform) == float or type(uniform) == int:
                     glUniform1f(uniformLoc, float(uniform))
@@ -89,13 +88,11 @@ class ModelObject(GeometryObject):
                 elif len(uniform) == 4:
                     glUniform4f(uniformLoc, uniform[0], uniform[1], uniform[2], uniform[3])
 
-
         texUnit = GL_TEXTURE0
         for tex in self.textures:
             glActiveTexture(texUnit)
             glBindTexture(GL_TEXTURE_2D, tex)
             texUnit += 1
-
 
         glDrawArrays(GL_TRIANGLES, 0, self.tricount)
 
@@ -105,15 +102,16 @@ class ModelObject(GeometryObject):
         if self.vao is not None:
             glDeleteVertexArrays(1, [self.vao])
 
+
 class FSQuad(ModelObject):
-    def __init__(self):
+    def __init__(self, z: float = 0):
         super(FSQuad, self).__init__()
 
-        verts = np.array([1, -1, 0, 1, 0, 0, 0, 1,
-                          -1, 1, 0, 0, 1, 0, 0, 1,
-                          -1, -1, 0, 0, 0, 0, 0, 1,
-                          1, -1, 0, 1, 0, 0, 0, 1,
-                          1, 1, 0, 1, 1, 0, 0, 1,
-                          -1, 1, 0, 0, 1, 0, 0, 1], np.float32)
+        verts = np.array([1, -1, z, 1, 0, 0, 0, 1,
+                          -1, 1, z, 0, 1, 0, 0, 1,
+                          -1, -1, z, 0, 0, 0, 0, 1,
+                          1, -1, z, 1, 0, 0, 0, 1,
+                          1, 1, z, 1, 1, 0, 0, 1,
+                          -1, 1, z, 0, 1, 0, 0, 1], np.float32)
 
         self.loadFromVerts(verts)
