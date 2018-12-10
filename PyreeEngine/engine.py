@@ -186,6 +186,8 @@ class Engine():
 
         glfw.swap_interval(1)
 
+        self.layercontext.frame = self.layercontext.frame + 1
+
     def framebufferResizeCallback(self, window, width, height):
         glViewport(0, 0, width, height)
         self.layercontext.setresolution(width, height)

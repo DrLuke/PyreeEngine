@@ -55,6 +55,7 @@ class LayerContext():
     def __init__(self):
         self.time: float = 0.
         self.dt: float = 1.
+        self.frame: int = 0
 
         self.resolution: Resolution = Resolution(width=800, height=600)
         self.aspect = self.resolution.width / self.resolution.height
