@@ -127,7 +127,7 @@ class Engine():
         self.oscserver = pythonosc.osc_server.AsyncIOOSCUDPServer((self.programconfig.oscserveraddress, self.programconfig.oscserverport), self.oscdispatcher, self.oscserverloop)
         self.oscserver.serve()
 
-        self.oscclient = pythonosc.udp_client.UDPClient(self.programconfig.oscclientaddress, self.programconfig.oscclientport)
+        self.oscclient = pythonosc.udp_client.SimpleUDPClient(self.programconfig.oscclientaddress, self.programconfig.oscclientport)
 
 
         ## Layer Context and Manager
