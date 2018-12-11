@@ -125,8 +125,10 @@ class Engine():
         self.oscdispatcher = pythonosc.dispatcher.Dispatcher()
         self.oscserverloop = asyncio.get_event_loop()
         self.oscserver = pythonosc.osc_server.AsyncIOOSCUDPServer((self.programconfig.oscserveraddress, self.programconfig.oscserverport), self.oscdispatcher, self.oscserverloop)
+        self.oscserver.serve()
 
         self.oscclient = pythonosc.udp_client.UDPClient(self.programconfig.oscclientaddress, self.programconfig.oscclientport)
+
 
         ## Layer Context and Manager
         self.layercontext: LayerContext = LayerContext()
@@ -174,6 +176,10 @@ class Engine():
         newtime = glfw.get_time()
         self.layercontext.dt = newtime - self.layercontext.time
         self.layercontext.time = newtime
+
+        # Process all OSC events that came in during the last frame
+        self.oscserverloop.stop()
+        self.oscserverloop.run_forever()
 
         glClearColor(0.2, 0.2, 0.3, 1.)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
