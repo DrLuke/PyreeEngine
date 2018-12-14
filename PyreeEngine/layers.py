@@ -119,6 +119,7 @@ class Layer():
 
         if self.loadmodule():
             self.valid = True
+            self.old = False
         else:
             self.valid = False
 
@@ -163,6 +164,7 @@ class Layer():
             print(exc, file=sys.stderr)
             log.error("LAYER", "Module %s load exception, old instance persists on Layer %s" % (
                 self.config.module, self.config.name))
+            self.old = True
             return False
 
         # Import was successful, try to get class
