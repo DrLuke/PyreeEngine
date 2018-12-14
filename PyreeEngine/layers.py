@@ -129,7 +129,15 @@ class Layer():
         if self.checkfilewatch():
             self.loadmodule()
 
-        self.entryinstance.tick()
+        if self.valid:
+            try:
+                self.entryinstance.tick()
+            except Exception as exc:
+                print(traceback.format_exc(), file=sys.stderr)
+                print(exc, file=sys.stderr)
+                log.error("LAYER", "TICK EXCEPTION in module %s on layer %s" % (self.config.module, self.config.name))
+                self.valid = False
+
 
     def loadmodule(self) -> bool:
         """Loads the module and extracts entry point class"""
