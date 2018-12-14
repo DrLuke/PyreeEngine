@@ -128,7 +128,11 @@ class Layer():
     def tick(self):
         """Check iwatch and replace module if necessary"""
         if self.checkfilewatch():
-            self.loadmodule()
+            if self.loadmodule():
+                self.valid = True
+                self.old = False
+            else:
+                self.valid = False
 
         if self.valid:
             try:
@@ -138,7 +142,7 @@ class Layer():
                 print(exc, file=sys.stderr)
                 log.error("LAYER", "TICK EXCEPTION in module %s on layer %s" % (self.config.module, self.config.name))
                 self.valid = False
-
+                self.entryinstance = None
 
     def loadmodule(self) -> bool:
         """Loads the module and extracts entry point class"""
@@ -197,8 +201,6 @@ class Layer():
 
     def checkfilewatch(self) -> bool:
         retVal = False
-        if not self.valid:
-            return False
         events = self.iNotify.read(timeout=0)
         for event in events:
             if self.checkevent(event):
