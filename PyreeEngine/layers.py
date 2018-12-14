@@ -2,7 +2,7 @@
 
 import types
 import typing
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from pathlib import Path
 
@@ -62,7 +62,7 @@ class LayerContext():
         self.resolutionChangeCallbacks: List[types.FunctionType] = []
 
         self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None  # Server for receiving messages
-        self.oscclient: pythonosc.udp_client.UDPClient = None  # Client for sending out messages
+        self.oscclient: Union[pythonosc.udp_client.UDPClient, pythonosc.udp_client.SimpleUDPClient] = None  # Client for sending out messages
 
     def addresolutioncallback(self, newfunc: types.FunctionType):
         self.resolutionChangeCallbacks.append(newfunc)
