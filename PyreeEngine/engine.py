@@ -106,7 +106,7 @@ class Engine():
 
         resolution = (1280, 720)
 
-        #self.window = glfw.create_window(1920, 1200, "PyreeEngine", self.monitors[1], None)
+        #self.window = glfw.create_window(4096, 786, "PyreeEngine", self.monitors[b"HDMI2"].monitorptr, None)
         self.window = glfw.create_window(resolution[0], resolution[1], "PyreeEngine", None, None)
         glfw.set_framebuffer_size_callback(self.window, self.framebufferResizeCallback)
 
@@ -121,14 +121,14 @@ class Engine():
         with open("programconfig.json", "r") as f:
             self.programconfig = ProgramConfig(**json.load(f))
 
-        ## OSC setup
+        # OSC setup
         self.oscdispatcher = pythonosc.dispatcher.Dispatcher()
-        self.oscserverloop = asyncio.get_event_loop()
-        self.oscserver = pythonosc.osc_server.AsyncIOOSCUDPServer((self.programconfig.oscserveraddress, self.programconfig.oscserverport), self.oscdispatcher, self.oscserverloop)
-        self.oscserver.serve()
-
         self.oscclient = pythonosc.udp_client.SimpleUDPClient(self.programconfig.oscclientaddress, self.programconfig.oscclientport)
 
+        def defaultosc(*args):
+            print(f"*Unmapped OSC message: {args}")
+
+        self.oscdispatcher.set_default_handler(defaultosc)
 
         ## Layer Context and Manager
         self.layercontext: LayerContext = LayerContext()
@@ -137,13 +137,6 @@ class Engine():
 
         self.layercontext.oscdispatcher = self.oscdispatcher
         self.layercontext.oscclient = self.oscclient
-
-        newtime = glfw.get_time()
-        self.layercontext.dt = newtime - self.layercontext.time
-        self.layercontext.time = newtime
-
-        self.layermanager: LayerManager = LayerManager(self.programconfig, self.layercontext)
-
 
     def getmonitors(self) -> Dict[str, ctypes.POINTER(ctypes.POINTER(glfw._GLFWmonitor))]:
         monitors = {}
@@ -164,9 +157,26 @@ class Engine():
     def init(self):
         pass
 
-    def startmainloop(self) -> None:
+    async def startmainloop(self) -> None:
+        newtime = glfw.get_time()
+        self.layercontext.dt = newtime - self.layercontext.time
+        self.layercontext.time = newtime
+
+        self.layermanager: LayerManager = LayerManager(self.programconfig, self.layercontext)
+
+        ## Async Loop
+        self.asyncloop = asyncio.get_running_loop()
+        self.asyncloop.set_debug(True)
+
+        ## OSC setup
+        self.oscserver = pythonosc.osc_server.AsyncIOOSCUDPServer(
+            (self.programconfig.oscserveraddress, self.programconfig.oscserverport), self.oscdispatcher, self.asyncloop)
+
+        self.transport, protocol = await self.oscserver.create_serve_endpoint()
         while (not glfw.window_should_close(self.window)):
             self.mainLoop()
+            await asyncio.sleep(0)  # Give other tasks a chance
+        self.transport.close()
 
     def mainLoop(self) -> None:
         glfw.make_context_current(self.window)
@@ -174,12 +184,12 @@ class Engine():
         glfw.poll_events()
 
         newtime = glfw.get_time()
-        self.layercontext.dt = newtime - self.layercontext.time
+        self.layercontext.dt = min(0.2, newtime - self.layercontext.time)   # Limit delta time to 0.2 to prevent fuckery
         self.layercontext.time = newtime
 
-        # Process all OSC events that came in during the last frame
-        self.oscserverloop.stop()
-        self.oscserverloop.run_forever()
+        # Run async loop once
+        #self.asyncloop.stop()
+        #self.asyncloop.run_forever()
 
         glClearColor(0.2, 0.2, 0.3, 1.)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
