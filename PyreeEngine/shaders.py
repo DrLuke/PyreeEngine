@@ -138,13 +138,21 @@ class HotloadingShader(Shader):
         try:
             if self.vertexPath.exists():
                 with self.vertexPath.open() as f:
-                    self.vertShader = shaders.compileShader(f.read(), GL_VERTEX_SHADER)
+                    try:
+                        self.vertShader = shaders.compileShader(f.read(), GL_VERTEX_SHADER)
+                    except:
+                        print(f"ERROR COMPILING VERT SHADER: {self.vertexPath.absolute()}", file=sys.stderr)
+                        raise
             else:
                 print("HOTLOADSHADER ERROR: vertex file doesn't exist")
                 return
             if self.fragmentPath.exists():
                 with self.fragmentPath.open() as f:
-                    self.fragShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+                    try:
+                        self.fragShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+                    except:
+                        print(f"ERROR COMPILING FRAG SHADER: {self.fragmentPath.absolute()}", file=sys.stderr)
+                        raise
             else:
                 print("HOTLOADSHADER ERROR: fragment file doesn't exist")
                 return
@@ -152,7 +160,11 @@ class HotloadingShader(Shader):
             if self.geometryPath is not None:
                 if self.geometryPath.exists():
                     with self.geometryPath.open() as f:
-                        self.vertShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+                        try:
+                            self.vertShader = shaders.compileShader(f.read(), GL_FRAGMENT_SHADER)
+                        except:
+                            print(f"ERROR COMPILING GEOM SHADER: {self.geometryPath.absolute()}", file=sys.stderr)
+                            raise
                 else:
                     print("HOTLOADSHADER ERROR: geometry file doesn't exist")
                     return
