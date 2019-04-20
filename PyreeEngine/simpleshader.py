@@ -44,10 +44,11 @@ class SimpleShader():
         self.context.removeresolutionscallback(self.resolutionchangecallback)
 
     def tick(self):
-        self.shader.tick()
+        if self.shader is not None:
+            self.shader.tick()
 
         self.framebuffer.bindFramebuffer()
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClear(GL_DEPTH_BUFFER_BIT)
 
         self.setuniform("time", self.context.time)
         self.setuniform("dt", self.context.dt)
@@ -55,7 +56,6 @@ class SimpleShader():
 
         self.fsquad.render(self.camera.viewMatrix)
 
-        self.framebuffer.rendertoscreen()
 
     def setuniform(self, name: str, value: Union[any, List[any]]):
         self.fsquad.uniforms[name] = value
