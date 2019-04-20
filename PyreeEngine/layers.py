@@ -2,7 +2,7 @@
 
 import types
 import typing
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Any
 
 from pathlib import Path
 
@@ -38,6 +38,7 @@ class LayerConfig(typing.NamedTuple):
 
     onloadoscpath: str = "/load"  # OSC path to send message to on load
     onloadoscmessage: str = "LOAD"  # Message to send on load to onloadoscpath
+    sortkey: Any = 0
 
 
 class ProgramConfig(typing.NamedTuple):
@@ -63,6 +64,8 @@ class LayerContext():
 
         self.oscdispatcher: pythonosc.dispatcher.Dispatcher = None  # Server for receiving messages
         self.oscclient: Union[pythonosc.udp_client.UDPClient, pythonosc.udp_client.SimpleUDPClient] = None  # Client for sending out messages
+
+        self.data = {}  # Additional misc. data that can be shared across layers
 
     def addresolutioncallback(self, newfunc: types.FunctionType):
         self.resolutionChangeCallbacks.append(newfunc)
@@ -233,6 +236,7 @@ class LayerManager():
             layerconf = LayerConfig(**layerdef)
             newlayer = Layer(layerconf, self.context)
             self.layers.append(newlayer)
+        self.layers = sorted(self.layers, key=lambda x: x.config.sortkey)
 
     def tick(self):
         for layer in self.layers:

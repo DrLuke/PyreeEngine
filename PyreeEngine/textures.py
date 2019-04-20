@@ -100,6 +100,8 @@ class TextureFromImage(Texture):
 
         self.texFromImage(path)
 
+        self.size = [1, 1]
+
     def texFromImage(self, path: Path, mode: str="RGBA"):
         imdata = np.flipud(imread(path, False, mode))
 
@@ -115,6 +117,9 @@ class TextureFromImage(Texture):
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imdata.shape[0], imdata.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, np.array(imdata.flatten(), 'B'))
         glGenerateMipmap(GL_TEXTURE_2D)
+
+        self.size = [imdata.shape[0], imdata.shape[1]]
+
 
     def getTexture(self):
         if type(self.textures) is list and len(self.textures) == 1:
