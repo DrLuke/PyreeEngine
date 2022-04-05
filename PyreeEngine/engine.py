@@ -106,7 +106,8 @@ class Engine():
 
         resolution = (1280, 720)
 
-        #self.window = glfw.create_window(4096, 786, "PyreeEngine", self.monitors[b"HDMI2"].monitorptr, None)
+        # self.window = glfw.create_window(resolution[0], resolution[1], "PyreeEngine", self.monitors[b"CSO 0x1400"].monitorptr, None)
+        #self.window = glfw.create_window(1920, 1080, "PyreeEngine", self.monitors[b"AOC Q3279WG5B"].monitorptr, None)
         self.window = glfw.create_window(resolution[0], resolution[1], "PyreeEngine", None, None)
         glfw.set_framebuffer_size_callback(self.window, self.framebufferResizeCallback)
 
