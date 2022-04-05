@@ -8,7 +8,7 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 
-from scipy.ndimage import imread
+from imageio import imread
 
 from enum import Enum
 
@@ -103,7 +103,7 @@ class TextureFromImage(Texture):
         self.size = [1, 1]
 
     def texFromImage(self, path: Path, mode: str="RGBA"):
-        imdata = np.flipud(imread(path, False, mode))
+        imdata = np.flipud(imread(path))
 
         if self.textures is not None:
             glDeleteTextures(self.textures)    # Clean up old texture
