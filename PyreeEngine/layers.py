@@ -165,6 +165,7 @@ class Layer():
                 self.module = None
         except ModuleNotFoundError:
             log.error("LAYER", "Module %s not found" % self.config.module)
+            raise
             return False
         except Exception as exc:
             print(traceback.format_exc(), file=sys.stderr)
