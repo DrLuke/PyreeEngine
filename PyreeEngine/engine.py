@@ -104,6 +104,8 @@ class Engine():
         self.monitors: Dict[str, Monitor] = {}
         self.monitors = self.getmonitors()
 
+        print(self.monitors)
+
         resolution = (1280, 720)
 
         # self.window = glfw.create_window(resolution[0], resolution[1], "PyreeEngine", self.monitors[b"CSO 0x1400"].monitorptr, None)
@@ -154,6 +156,8 @@ class Engine():
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         glfw.window_hint(glfw.SAMPLES, 4)
         glfw.window_hint(glfw.AUTO_ICONIFY, False)
+        glfw.window_hint(glfw.DECORATED, False)
+        glfw.window_hint(glfw.FOCUSED, False)
 
     def init(self):
         pass
