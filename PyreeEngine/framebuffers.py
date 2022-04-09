@@ -53,7 +53,7 @@ class RegularFramebuffer(Framebuffer):
         self.initrendertoscreen()
 
     def __del__(self):
-        glDeleteFramebuffers([self.fbo])
+        glDeleteFramebuffers(1, [self.fbo])
         glDeleteTextures([self.texture])
 
     def initrendertoscreen(self):
